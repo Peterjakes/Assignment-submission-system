@@ -1,9 +1,101 @@
 const createError = require("http-errors")
-const User = require("../models/authModel")
-const { registerSchema, loginSchema } = require("../helpers/validationSchema")
+const User = require("../models/User")
 const { signAccessToken, signRefreshToken } = require("../helpers/jwtHelper")
+const { registerSchema, loginSchema } = require("../helpers/validationSchema")
 
 const authController = {
+  // Register a new user
+  register: async (req, res, next) => {
+    try {
+      // Validate request body
+      const result = await registerSchema.validateAsync(req.body)
+      const { username, email } = result
+
+      // Check if user already exists
+      const exists = await User.findOne({ $or: [{ username }, { email }] })
+      if (exists) {
+        throw createError.Conflict(`${exists.username === username ? "Username" : "Email"} is already registered`)
+      }
+
+      // Check if this is the first user in the system
+      const userCount = await User.countDocuments()
+      if (userCount === 0) {
+        // First user is automatically an admin
+        result.role = "admin"
+      }
+
+      // Create new user
+      const user = new User(result)
+      const savedUser = await user.save()
+
+      // Generate tokens
+      const accessToken = await signAccessToken(savedUser.id, savedUser.role)
+      const refreshToken = await signRefreshToken(savedUser.id)
+
+      res.status(201).json({
+        message: "User registered successfully",
+        accessToken,
+        refreshToken,
+        user: {
+          id: savedUser._id,
+          username: savedUser.username,
+          role: savedUser.role,
+          fullName: savedUser.fullName,
+          email: savedUser.email,
+        },
+      })
+    } catch (error) {
+      console.error("Registration error:", error.message)
+      if (error.isJoi === true) {
+        error.status = 422
+      }
+      next(error)
+    }
+  },
+
+  // Login user
+  login: async (req, res, next) => {
+    try {
+      // Validate request body
+      const result = await loginSchema.validateAsync(req.body)
+      const { email, password } = result
+
+      // Find user
+      const user = await User.findOne({ email })
+      if (!user) {
+        throw createError.NotFound("User not registered")
+      }
+
+      // Verify password
+      const isMatch = await user.comparePassword(password)
+      if (!isMatch) {
+        throw createError.Unauthorized("Invalid email/password")
+      }
+
+      // Generate tokens
+      const accessToken = await signAccessToken(user.id, user.role)
+      const refreshToken = await signRefreshToken(user.id)
+
+      res.json({
+        accessToken,
+        refreshToken,
+        user: {
+          id: user._id,
+          username: user.username,
+          role: user.role,
+          fullName: user.fullName,
+          email: user.email,
+        },
+      })
+    } catch (error) {
+      console.error("Login error:", error.message)
+      if (error.isJoi === true) {
+        return next(createError.BadRequest("Invalid email/password"))
+      }
+      next(error)
+    }
+  },
+
   // Special first admin setup - only works when no users exist
   setupFirstAdmin: async (req, res, next) => {
     try {
@@ -38,86 +130,10 @@ const authController = {
         },
       })
     } catch (error) {
+      console.error("Setup first admin error:", error.message)
       if (error.isJoi === true) {
         error.status = 422
       }
-      next(error)
-    }
-  },
-
-  login: async (req, res, next) => {
-    try {
-      // Validate request body
-      const result = await loginSchema.validateAsync(req.body)
-
-      // Find user
-      const user = await User.findOne({ email: result.email })
-      if (!user) {
-        throw createError.NotFound("User not registered")
-      }
-
-      // Verify password
-      const isMatch = await user.comparePassword(result.password)
-      if (!isMatch) {
-        throw createError.Unauthorized("Invalid email/password")
-      }
-
-      // Generate tokens
-      const accessToken = await signAccessToken(user.id, user.role)
-      const refreshToken = await signRefreshToken(user.id)
-
-      res.json({
-        accessToken,
-        refreshToken,
-        user: {
-          id: user._id,
-          username: user.username,
-          role: user.role,
-          fullName: user.fullName,
-          email: user.email,
-        },
-      })
-    } catch (error) {
-      if (error.isJoi === true) {
-        return next(createError.BadRequest("Invalid email/password"))
-      }
-      next(error)
-    }
-  },
-
-  getAllUsers: async (req, res, next) => {
-    try {
-      // Only return necessary fields, not password
-      const users = await User.find({}, "-password")
-      res.json(users)
-    } catch (error) {
-      console.error("Get users error:", error.message)
-      next(error)
-    }
-  },
-
-  getUserById: async (req, res, next) => {
-    try {
-      const user = await User.findById(req.params.id, )
-      if (!user) {
-        throw createError(404, "User not found")
-      }
-      res.json(user)
-    } catch (error) {
-      console.error("Get user error:", error.message)
-      next(error)
-    }
-  },
-
-  deleteUser: async (req, res, next) => {
-    try {
-      const user = await User.findByIdAndDelete(req.params.id)
-      if (!user) {
-        throw createError(404, "User not found")
-      }
-      res.json({ message: "User deleted successfully" })
-    } catch (error) {
-      console.error("Delete user error:", error.message)
       next(error)
     }
   },
