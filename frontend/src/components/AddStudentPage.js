@@ -1,5 +1,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { toast } from "react-toastify"
+import axios from "axios"
 import { Card, Form, Button } from "react-bootstrap"
 
 function AddStudentPage() {
@@ -19,7 +21,41 @@ function AddStudentPage() {
   
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+    try {
+      setLoading(true)
+      const token = localStorage.getItem("token")
+      
+      // Transform the data to match your API expectations
+      const studentData = {
+        username: `${data.firstname.toLowerCase()}.${data.lastname.toLowerCase()}`,
+        password: "password123", // Default password that can be changed later
+        fullName: `${data.firstname} ${data.lastname}`,
+        email: `${data.firstname.toLowerCase()}.${data.lastname.toLowerCase()}@example.com`,
+        studentId: `STU${Math.floor(10000 + Math.random() * 90000)}`,
+        role: "student",
+        gender: data.gender,
+      }
+      
+      await axios.post(`${API_URL}/users`, studentData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+      
+      toast.success("Student added successfully!")
+      setData({
+        firstname: "",
+        lastname: "",
+        gender: "",
+      })
+      navigate("/students")
+    } catch (error) {
+      toast.error(error.response?.data?.error?.message || "Failed to add student. Please try again.")
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
   }
   
   return (
