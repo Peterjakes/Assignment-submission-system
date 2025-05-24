@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Card, Form, Button, Row, Col } from "react-bootstrap"
 
 const CreateAssignment = () => {
+  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -18,13 +19,32 @@ const CreateAssignment = () => {
     })
   }
 
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    try {
+      setLoading(true)
+      // TODO: Implement API call
+      console.log("Assignment data:", formData)
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      alert("Assignment created successfully!")
+    } catch (error) {
+      alert("Failed to create assignment")
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <Card>
       <Card.Header>
         <Card.Title>Create New Assignment</Card.Title>
       </Card.Header>
       <Card.Body>
-        <Form>
+        <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">
             <Form.Label>Title</Form.Label>
             <Form.Control type="text" name="title" value={formData.title} onChange={handleChange} required />
@@ -74,8 +94,8 @@ const CreateAssignment = () => {
             />
           </Form.Group>
 
-          <Button variant="primary" type="submit">
-            Create Assignment
+          <Button variant="primary" type="submit" disabled={loading}>
+            {loading ? "Creating..." : "Create Assignment"}
           </Button>
         </Form>
       </Card.Body>
