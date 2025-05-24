@@ -26,16 +26,18 @@ const CreateAssignment = () => {
     e.preventDefault()
     try {
       setLoading(true)
-      // TODO: Add authentication and API call
-      console.log("Assignment data:", formData)
-      console.log("API URL:", API_URL)
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
+      const token = localStorage.getItem("token")
+
+      await axios.post(`${API_URL}/assignments`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+
       alert("Assignment created successfully!")
     } catch (error) {
-      alert("Failed to create assignment")
+      alert("Failed to create assignment. Please try again.")
       console.error(error)
     } finally {
       setLoading(false)
