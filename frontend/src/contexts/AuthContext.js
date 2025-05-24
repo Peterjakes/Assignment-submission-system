@@ -14,7 +14,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true) // Start with loading true
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   // Check for existing auth on startup
@@ -25,14 +25,10 @@ export const AuthProvider = ({ children }) => {
       
       if (token && userData) {
         try {
-          // Set auth header
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-          
-          // Restore user data
           setUser(JSON.parse(userData))
           setIsAuthenticated(true)
         } catch (error) {
-          // Invalid stored data, clear it
           sessionStorage.removeItem('token')
           sessionStorage.removeItem('user')
         }
@@ -56,11 +52,8 @@ export const AuthProvider = ({ children }) => {
       
       const { user, accessToken } = response.data
       
-      // Store token and user data
       sessionStorage.setItem('token', accessToken)
       sessionStorage.setItem('user', JSON.stringify(user))
-      
-      // Set auth header for future requests
       axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
       
       setUser(user)
@@ -75,12 +68,35 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  const register = async (userData) => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const response = await axios.post('http://localhost:5000/api/auth/register', userData)
+      
+      const { user, accessToken } = response.data
+      
+      // Same logic as login - store token and authenticate
+      sessionStorage.setItem('token', accessToken)
+      sessionStorage.setItem('user', JSON.stringify(user))
+      axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
+      
+      setUser(user)
+      setIsAuthenticated(true)
+      
+      return { success: true }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Registration failed')
+      return { success: false, error: err.response?.data?.message }
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const logout = () => {
-    // Clear stored data
     sessionStorage.removeItem('token')
     sessionStorage.removeItem('user')
-    
-    // Remove auth header
     delete axios.defaults.headers.common['Authorization']
     
     setUser(null)
@@ -94,7 +110,8 @@ export const AuthProvider = ({ children }) => {
       user, 
       loading,
       error,
-      login, 
+      login,
+      register,
       logout 
     }}>
       {children}
