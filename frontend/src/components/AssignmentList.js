@@ -52,6 +52,31 @@ const AssignmentList = () => {
     }
   }
 
+  const handlePublishAssignment = async (id) => {
+    try {
+      const token = localStorage.getItem("token")
+      await axios.patch(
+        `${API_URL}/assignments/${id}/publish`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
+
+      // Update the assignment in the state
+      setAssignments(
+        assignments.map((assignment) => (assignment._id === id ? { ...assignment, published: true } : assignment)),
+      )
+
+      toast.success("Assignment published successfully")
+    } catch (err) {
+      toast.error("Failed to publish assignment")
+      console.error(err)
+    }
+  }
+
   if (loading) return <div className="d-flex justify-content-center p-5">Loading assignments...</div>
   if (error) return <div className="alert alert-danger">{error}</div>
 
@@ -102,10 +127,24 @@ const AssignmentList = () => {
                             </Button>
                           </Link>
 
+                          {!assignment.published && (
+                            <Button variant="info" size="sm" onClick={() => handlePublishAssignment(assignment._id)}>
+                              Publish
+                            </Button>
+                          )}
+
                           <Button variant="danger" size="sm" onClick={() => handleDeleteAssignment(assignment._id)}>
                             Delete
                           </Button>
                         </>
+                      )}
+
+                      {user.role === "student" && assignment.published && (
+                        <Link to={`/assignments/${assignment._id}/submit`}>
+                          <Button variant="success" size="sm">
+                            Submit
+                          </Button>
+                        </Link>
                       )}
                     </div>
                   </td>
