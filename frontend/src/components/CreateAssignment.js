@@ -1,8 +1,11 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { toast } from "react-toastify"
 import axios from "axios"
 import { Card, Form, Button, Row, Col } from "react-bootstrap"
 
 const CreateAssignment = () => {
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     title: "",
@@ -35,9 +38,10 @@ const CreateAssignment = () => {
         },
       })
 
-      alert("Assignment created successfully!")
+      toast.success("Assignment created successfully!")
+      navigate("/assignments")
     } catch (error) {
-      alert("Failed to create assignment. Please try again.")
+      toast.error(error.response?.data?.error?.message || "Failed to create assignment. Please try again.")
       console.error(error)
     } finally {
       setLoading(false)
