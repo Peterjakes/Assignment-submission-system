@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 import { Card, Form, Button, Alert, Row, Col } from "react-bootstrap"
 
@@ -54,11 +54,11 @@ const Register = () => {
   }
 
   return (
-    <div>
-      <Card>
-        <Card.Body>
-          <h2>Assignment Management System</h2>
-          <h5>Register</h5>
+    <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light">
+      <Card className="w-100" style={{ maxWidth: "600px" }}>
+        <Card.Body className="p-4">
+          <h2 className="text-center mb-2">Assignment Management System</h2>
+          <h5 className="text-center text-muted mb-4">Register</h5>
 
           {error && <Alert variant="danger">{error}</Alert>}
 
@@ -89,6 +89,7 @@ const Register = () => {
                 </Form.Group>
               </Col>
             </Row>
+
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
@@ -109,6 +110,7 @@ const Register = () => {
                 </Form.Group>
               </Col>
             </Row>
+
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
@@ -138,10 +140,16 @@ const Register = () => {
               </Col>
             </Row>
 
-            <Button variant="primary" type="submit" disabled={loading}>
+            <Button variant="primary" type="submit" disabled={loading} className="w-100 mt-3">
               {loading ? "Registering..." : "Register"}
             </Button>
           </Form>
+
+          <div className="text-center mt-3">
+            <p>
+              Already have an account? <Link to="/login">Login</Link>
+            </p>
+          </div>
         </Card.Body>
       </Card>
     </div>
