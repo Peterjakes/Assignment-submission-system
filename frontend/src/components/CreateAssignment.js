@@ -104,9 +104,14 @@ const CreateAssignment = () => {
             />
           </Form.Group>
 
-          <Button variant="primary" type="submit" disabled={loading}>
-            {loading ? "Creating..." : "Create Assignment"}
-          </Button>
+          <div className="d-flex justify-content-end">
+            <Button variant="secondary" className="me-2" onClick={() => navigate("/assignments")}>
+              Cancel
+            </Button>
+            <Button variant="primary" type="submit" disabled={loading}>
+              {loading ? "Creating..." : "Create Assignment"}
+            </Button>
+          </div>
         </Form>
       </Card.Body>
     </Card>
