@@ -1,4 +1,6 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { useAuth } from "../contexts/AuthContext"
 import { Card, Form, Button, Alert, Row, Col } from "react-bootstrap"
 
 const Register = () => {
@@ -11,6 +13,8 @@ const Register = () => {
     studentId: "",
   })
   const [error, setError] = useState("")
+  const { register, loading } = useAuth()
+  const navigate = useNavigate()
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -30,15 +34,31 @@ const Register = () => {
       return
     }
 
-    // TODO: Implement actual registration logic
-    console.log("Registration data:", formData)
+    // Prepare data for API
+    const userData = {
+      username: formData.username,
+      password: formData.password,
+      fullName: formData.fullName,
+      email: formData.email,
+      studentId: formData.studentId,
+      role: "student", // Default role
+    }
+
+    const result = await register(userData)
+
+    if (result.success) {
+      navigate("/dashboard")
+    } else {
+      setError(result.error)
+    }
   }
 
   return (
     <div>
       <Card>
         <Card.Body>
-          <h2>Register</h2>
+          <h2>Assignment Management System</h2>
+          <h5>Register</h5>
 
           {error && <Alert variant="danger">{error}</Alert>}
 
@@ -117,7 +137,10 @@ const Register = () => {
                 </Form.Group>
               </Col>
             </Row>
-            <Button variant="primary" type="submit">Register</Button>
+
+            <Button variant="primary" type="submit" disabled={loading}>
+              {loading ? "Registering..." : "Register"}
+            </Button>
           </Form>
         </Card.Body>
       </Card>
