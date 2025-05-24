@@ -1,4 +1,5 @@
 import { useState } from "react"
+import axios from "axios"
 import { Card, Form, Button, Row, Col } from "react-bootstrap"
 
 const CreateAssignment = () => {
@@ -10,6 +11,8 @@ const CreateAssignment = () => {
     totalMarks: 100,
     published: false,
   })
+
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api"
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -23,8 +26,9 @@ const CreateAssignment = () => {
     e.preventDefault()
     try {
       setLoading(true)
-      // TODO: Implement API call
+      // TODO: Add authentication and API call
       console.log("Assignment data:", formData)
+      console.log("API URL:", API_URL)
       
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 2000))
