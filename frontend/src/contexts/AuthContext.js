@@ -27,7 +27,15 @@ export const AuthProvider = ({ children }) => {
         password
       })
       
-      const { user } = response.data
+      const { user, accessToken } = response.data
+      
+      // Store token and user data
+      sessionStorage.setItem('token', accessToken)
+      sessionStorage.setItem('user', JSON.stringify(user))
+      
+      // Set auth header for future requests
+      axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
+      
       setUser(user)
       setIsAuthenticated(true)
       
@@ -41,6 +49,13 @@ export const AuthProvider = ({ children }) => {
   }
 
   const logout = () => {
+    // Clear stored data
+    sessionStorage.removeItem('token')
+    sessionStorage.removeItem('user')
+    
+    // Remove auth header
+    delete axios.defaults.headers.common['Authorization']
+    
     setUser(null)
     setIsAuthenticated(false)
     setError(null)
