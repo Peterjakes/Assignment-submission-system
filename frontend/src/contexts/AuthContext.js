@@ -17,6 +17,8 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api"
+
   // Check for existing auth on startup
   useEffect(() => {
     const initAuth = () => {
@@ -40,12 +42,28 @@ export const AuthProvider = ({ children }) => {
     initAuth()
   }, [])
 
+  // Handle token expiration
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          // Token expired or invalid
+          logout()
+        }
+        return Promise.reject(error)
+      }
+    )
+
+    return () => axios.interceptors.response.eject(interceptor)
+  }, [])
+
   const login = async (email, password) => {
     try {
       setLoading(true)
       setError(null)
       
-      const response = await axios.post('http://localhost:5000/api/auth/login', {
+      const response = await axios.post(`${API_URL}/auth/login`, {
         email,
         password
       })
@@ -61,8 +79,9 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true }
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed')
-      return { success: false, error: err.response?.data?.message }
+      const errorMessage = err.response?.data?.error?.message || err.response?.data?.message || 'Login failed'
+      setError(errorMessage)
+      return { success: false, error: errorMessage }
     } finally {
       setLoading(false)
     }
@@ -73,11 +92,10 @@ export const AuthProvider = ({ children }) => {
       setLoading(true)
       setError(null)
       
-      const response = await axios.post('http://localhost:5000/api/auth/register', userData)
+      const response = await axios.post(`${API_URL}/auth/register`, userData)
       
       const { user, accessToken } = response.data
       
-      // Same logic as login - store token and authenticate
       sessionStorage.setItem('token', accessToken)
       sessionStorage.setItem('user', JSON.stringify(user))
       axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
@@ -87,8 +105,9 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true }
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed')
-      return { success: false, error: err.response?.data?.message }
+      const errorMessage = err.response?.data?.error?.message || err.response?.data?.message || 'Registration failed'
+      setError(errorMessage)
+      return { success: false, error: errorMessage }
     } finally {
       setLoading(false)
     }
