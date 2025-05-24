@@ -1,7 +1,7 @@
 const createError = require("http-errors")
 const mongoose = require("mongoose")
 const User = require("../models/User")
-const { updateUserSchema, registerSchema } = require("../helpers/validationSchema")
+const { updateUserSchema, registerSchema } = require("../helpers/validationSchema.js")
 
 const userController = {
   // Create a new user (student or admin/lecturer)

@@ -2,7 +2,7 @@ const createError = require("http-errors")
 const mongoose = require("mongoose")
 const Assignment = require("../models/Assignment")
 const Submission = require("../models/Submission")
-const { assignmentSchema, submissionSchema, gradeSchema } = require("../helpers/validationSchema")
+const { assignmentSchema, submissionSchema, gradeSchema } = require("../helpers/validationSchema.js")
 
 const assignmentController = {
   createAssignment: async (req, res, next) => {

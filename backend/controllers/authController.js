@@ -1,7 +1,7 @@
 const createError = require("http-errors")
 const User = require("../models/User")
 const { signAccessToken, signRefreshToken } = require("../helpers/jwtHelper")
-const { registerSchema, loginSchema } = require("../helpers/validationSchema")
+const { registerSchema, loginSchema } = require("../helpers/validationSchema.js")
 
 const authController = {
   // Register a new user
