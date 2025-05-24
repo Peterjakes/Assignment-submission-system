@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
+import { Link } from "react-router-dom"
 import axios from "axios"
-import { Card, Table } from "react-bootstrap"
+import { Card, Table, Button, Badge } from "react-bootstrap"
 
 const AssignmentList = () => {
   const [assignments, setAssignments] = useState([])
@@ -60,8 +61,20 @@ const AssignmentList = () => {
                 <tr key={assignment._id}>
                   <td>{assignment.title}</td>
                   <td>{new Date(assignment.dueDate).toLocaleDateString()}</td>
-                  <td>-</td>
-                  <td>-</td>
+                  <td>
+                    {assignment.published ? (
+                      <Badge bg="success">Published</Badge>
+                    ) : (
+                      <Badge bg="warning">Draft</Badge>
+                    )}
+                  </td>
+                  <td>
+                    <Link to={`/assignments/${assignment._id}`}>
+                      <Button variant="primary" size="sm">
+                        View
+                      </Button>
+                    </Link>
+                  </td>
                 </tr>
               ))}
             </tbody>
