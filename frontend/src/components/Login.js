@@ -1,13 +1,22 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { useAuth } from "../contexts/AuthContext"
 import { Card, Form, Button } from "react-bootstrap"
 
 const Login = () => {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const { login, loading } = useAuth()
+  const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log("Login attempt:", { email, password })
+
+    const result = await login(email, password)
+
+    if (result.success) {
+      navigate("/dashboard")
+    }
   }
 
   return (
@@ -38,8 +47,8 @@ const Login = () => {
               />
             </Form.Group>
 
-            <Button variant="primary" type="submit" className="w-100 mt-3">
-              Login
+            <Button variant="primary" type="submit" disabled={loading} className="w-100 mt-3">
+              {loading ? "Logging in..." : "Login"}
             </Button>
           </Form>
         </Card.Body>
