@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
 import axios from 'axios'
 
 const AuthContext = createContext()
@@ -14,8 +14,35 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true) // Start with loading true
   const [error, setError] = useState(null)
+
+  // Check for existing auth on startup
+  useEffect(() => {
+    const initAuth = () => {
+      const token = sessionStorage.getItem('token')
+      const userData = sessionStorage.getItem('user')
+      
+      if (token && userData) {
+        try {
+          // Set auth header
+          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+          
+          // Restore user data
+          setUser(JSON.parse(userData))
+          setIsAuthenticated(true)
+        } catch (error) {
+          // Invalid stored data, clear it
+          sessionStorage.removeItem('token')
+          sessionStorage.removeItem('user')
+        }
+      }
+      
+      setLoading(false)
+    }
+
+    initAuth()
+  }, [])
 
   const login = async (email, password) => {
     try {
