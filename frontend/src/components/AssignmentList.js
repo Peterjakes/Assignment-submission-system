@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import axios from "axios"
-import { Card } from "react-bootstrap"
+import { Card, Table } from "react-bootstrap"
 
 const AssignmentList = () => {
   const [assignments, setAssignments] = useState([])
@@ -46,13 +46,26 @@ const AssignmentList = () => {
         {assignments.length === 0 ? (
           <p className="text-center">No assignments found.</p>
         ) : (
-          <div>
-            {assignments.map((assignment) => (
-              <div key={assignment._id}>
-                <strong>{assignment.title}</strong> - Due: {assignment.dueDate}
-              </div>
-            ))}
-          </div>
+          <Table striped bordered hover responsive>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Due Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {assignments.map((assignment) => (
+                <tr key={assignment._id}>
+                  <td>{assignment.title}</td>
+                  <td>{new Date(assignment.dueDate).toLocaleDateString()}</td>
+                  <td>-</td>
+                  <td>-</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
         )}
       </Card.Body>
     </Card>
