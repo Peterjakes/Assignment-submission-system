@@ -31,12 +31,12 @@ const Dashboard = () => {
           setStats({
             assignments: assignmentsRes.data.length,
             students: studentsRes.data.length,
-            submissions: 0, // TODO: Implement
+            submissions: 0,
           })
         } else {
           setStats({
             assignments: assignmentsRes.data.filter(a => a.published).length,
-            submissions: 0, // TODO: Implement
+            submissions: 0,
           })
         }
 
@@ -57,36 +57,52 @@ const Dashboard = () => {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>Dashboard</h2>
         {user.role === "admin" && (
-          <Button variant="primary">Create Assignment</Button>
+          <div className="d-flex gap-2">
+            <Link to="/create-assignment">
+              <Button variant="primary">Create Assignment</Button>
+            </Link>
+            <Link to="/add-student">
+              <Button variant="success">Add Student</Button>
+            </Link>
+          </div>
         )}
       </div>
 
       <Row className="mb-4">
-        <Col md={4} className="mb-3">
+        <Col md={3} sm={6} className="mb-3">
           <Card className="text-center h-100 border-primary">
             <Card.Body>
               <h3 className="h5 text-muted">Assignments</h3>
               <h2 className="display-4 text-primary">{stats.assignments}</h2>
+              <Link to="/assignments" className="btn btn-outline-primary btn-sm">
+                View All
+              </Link>
             </Card.Body>
           </Card>
         </Col>
 
         {user.role === "admin" && (
-          <Col md={4} className="mb-3">
+          <Col md={3} sm={6} className="mb-3">
             <Card className="text-center h-100 border-success">
               <Card.Body>
                 <h3 className="h5 text-muted">Students</h3>
                 <h2 className="display-4 text-success">{stats.students}</h2>
+                <Link to="/students" className="btn btn-outline-success btn-sm">
+                  Manage Students
+                </Link>
               </Card.Body>
             </Card>
           </Col>
         )}
 
-        <Col md={4} className="mb-3">
+        <Col md={3} sm={6} className="mb-3">
           <Card className="text-center h-100 border-info">
             <Card.Body>
               <h3 className="h5 text-muted">Submissions</h3>
               <h2 className="display-4 text-info">{stats.submissions}</h2>
+              <Link to="/assignments" className="btn btn-outline-info btn-sm">
+                View All
+              </Link>
             </Card.Body>
           </Card>
         </Col>
