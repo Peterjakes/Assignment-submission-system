@@ -100,50 +100,54 @@ const UserManagement = () => {
           </Col>
         </Row>
 
-        <Table striped bordered hover responsive>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Username</th>
-              <th>Role</th>
-              <th>Student ID</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredUsers.map((user) => (
-              <tr key={user._id}>
-                <td>{user.fullName}</td>
-                <td>{user.email}</td>
-                <td>{user.username}</td>
-                <td>
-                  <Badge bg={user.role === "admin" ? "danger" : user.role === "lecturer" ? "warning" : "primary"}>
-                    {user.role}
-                  </Badge>
-                </td>
-                <td>{user.studentId || "N/A"}</td>
-                <td>
-                  <div className="d-flex gap-2">
-                    <Form.Select
-                      size="sm"
-                      value={user.role}
-                      onChange={(e) => handleRoleChange(user._id, e.target.value)}
-                      style={{ width: "120px" }}
-                    >
-                      <option value="student">Student</option>
-                      <option value="lecturer">Lecturer</option>
-                      <option value="admin">Admin</option>
-                    </Form.Select>
-                    <Button variant="danger" size="sm" onClick={() => handleDeleteUser(user._id)}>
-                      Delete
-                    </Button>
-                  </div>
-                </td>
+        {filteredUsers.length === 0 ? (
+          <p className="text-center">No users found.</p>
+        ) : (
+          <Table striped bordered hover responsive>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Student ID</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </Table>
+            </thead>
+            <tbody>
+              {filteredUsers.map((user) => (
+                <tr key={user._id}>
+                  <td>{user.fullName}</td>
+                  <td>{user.email}</td>
+                  <td>{user.username}</td>
+                  <td>
+                    <Badge bg={user.role === "admin" ? "danger" : user.role === "lecturer" ? "warning" : "primary"}>
+                      {user.role}
+                    </Badge>
+                  </td>
+                  <td>{user.studentId || "N/A"}</td>
+                  <td>
+                    <div className="d-flex gap-2">
+                      <Form.Select
+                        size="sm"
+                        value={user.role}
+                        onChange={(e) => handleRoleChange(user._id, e.target.value)}
+                        style={{ width: "120px" }}
+                      >
+                        <option value="student">Student</option>
+                        <option value="lecturer">Lecturer</option>
+                        <option value="admin">Admin</option>
+                      </Form.Select>
+                      <Button variant="danger" size="sm" onClick={() => handleDeleteUser(user._id)}>
+                        Delete
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        )}
       </Card.Body>
     </Card>
   )
