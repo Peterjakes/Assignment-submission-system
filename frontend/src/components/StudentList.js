@@ -13,6 +13,10 @@ const StudentList = () => {
     const fetchStudents = async () => {
       try {
         const token = localStorage.getItem("token")
+        if (!token) {
+          throw new Error("No authentication token found")
+        }
+        
         const response = await axios.get(`${API_URL}/users/students`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -30,7 +34,7 @@ const StudentList = () => {
     fetchStudents()
   }, [API_URL])
 
-  if (loading) return <div>Loading students...</div>
+  if (loading) return <div className="d-flex justify-content-center p-5">Loading students...</div>
   if (error) return <div className="alert alert-danger">{error}</div>
 
   return (
@@ -40,12 +44,13 @@ const StudentList = () => {
       </Card.Header>
       <Card.Body>
         {students.length === 0 ? (
-          <p>No students found.</p>
+          <p className="text-center">No students found.</p>
         ) : (
           <div>
             {students.map((student) => (
-              <div key={student._id}>
-                {student.fullName} - {student.email}
+              <div key={student._id} className="mb-2">
+                <strong>{student.fullName}</strong> - {student.email}
+                {student.studentId && <span> (ID: {student.studentId})</span>}
               </div>
             ))}
           </div>
