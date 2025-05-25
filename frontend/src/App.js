@@ -8,6 +8,8 @@ import Layout from "./components/Layout"
 import Login from "./components/Login"
 import Register from "./components/Register"
 import Dashboard from "./components/Dashboard"
+import AssignmentList from "./components/AssignmentList"
+import CreateAssignment from "./components/CreateAssignment"
 import "./App.css"
 
 function App() {
@@ -23,7 +25,12 @@ function App() {
           {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
+              {/* Dashboard - Overview page */}
               <Route path="/dashboard" element={<Dashboard />} />
+
+              {/* Assignment Management */}
+              <Route path="/assignments" element={<AssignmentList />} />
+              <Route path="/create-assignment" element={<CreateAssignment />} />
             </Route>
           </Route>
 
