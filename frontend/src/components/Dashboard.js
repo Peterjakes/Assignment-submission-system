@@ -263,6 +263,43 @@ const Dashboard = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* Quick Actions for Admin */}
+      {user.role === "admin" && (
+        <Row>
+          <Col md={12}>
+            <Card>
+              <Card.Header>
+                <Card.Title className="mb-0">Quick Actions</Card.Title>
+              </Card.Header>
+              <Card.Body>
+                <Row>
+                  <Col md={3} className="mb-2">
+                    <Link to="/create-assignment" className="btn btn-primary w-100">
+                      Create Assignment
+                    </Link>
+                  </Col>
+                  <Col md={3} className="mb-2">
+                    <Link to="/add-student" className="btn btn-success w-100">
+                      Add Student
+                    </Link>
+                  </Col>
+                  <Col md={3} className="mb-2">
+                    <Link to="/user-management" className="btn btn-info w-100">
+                      Manage Users
+                    </Link>
+                  </Col>
+                  <Col md={3} className="mb-2">
+                    <Link to="/assignments" className="btn btn-outline-primary w-100">
+                      View All Assignments
+                    </Link>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      )}
     </>
   )
 }
