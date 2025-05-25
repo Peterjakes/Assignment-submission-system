@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useNavigate, useParams } from "react-router-dom"
 import { Card, Form, Button } from "react-bootstrap"
 
 const UpdateStudentPage = () => {
@@ -8,6 +9,9 @@ const UpdateStudentPage = () => {
     email: "",
     studentId: "",
   })
+  
+  const navigate = useNavigate()
+  const { id } = useParams()
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -20,6 +24,7 @@ const UpdateStudentPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault()
     console.log("Form submitted:", data)
+    console.log("Student ID from URL:", id)
   }
 
   return (
@@ -70,9 +75,18 @@ const UpdateStudentPage = () => {
                 required 
               />
             </Form.Group>
-            <Button variant="primary" type="submit">
-              Update Student
-            </Button>
+            <div className="d-flex justify-content-end">
+              <Button 
+                variant="secondary" 
+                className="me-2" 
+                onClick={() => navigate("/students")}
+              >
+                Cancel
+              </Button>
+              <Button variant="primary" type="submit">
+                Update Student
+              </Button>
+            </div>
           </Form>
         </Card.Body>
       </Card>
