@@ -10,8 +10,10 @@ const Dashboard = () => {
     assignments: 0,
     students: 0,
     submissions: 0,
+    pendingSubmissions: 0,
   })
   const [recentAssignments, setRecentAssignments] = useState([])
+  const [recentSubmissions, setRecentSubmissions] = useState([])
   const [loading, setLoading] = useState(true)
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api"
@@ -23,7 +25,6 @@ const Dashboard = () => {
         const assignmentsRes = await axios.get(`${API_URL}/assignments`, {
           headers: { Authorization: `Bearer ${token}` },
         })
-        
         setRecentAssignments(assignmentsRes.data.slice(0, 5))
 
         if (user.role === "admin") {
@@ -31,15 +32,37 @@ const Dashboard = () => {
             headers: { Authorization: `Bearer ${token}` },
           })
 
+          const assignments = assignmentsRes.data
+          let submissions = []
+          let pendingCount = 0
+
+          // Fetch submissions for first few assignments
+          for (const assignment of assignments.slice(0, 3)) {
+            try {
+              const submissionsRes = await axios.get(`${API_URL}/assignments/${assignment._id}/submissions`, {
+                headers: { Authorization: `Bearer ${token}` },
+              })
+              submissions = [...submissions, ...submissionsRes.data]
+              pendingCount += submissionsRes.data.filter((s) => s.status !== "graded").length
+            } catch (err) {
+              console.log("Submissions endpoint not available yet")
+            }
+          }
+
           setStats({
-            assignments: assignmentsRes.data.length,
+            assignments: assignments.length,
             students: studentsRes.data.length,
-            submissions: 0,
+            submissions: submissions.length,
+            pendingSubmissions: pendingCount,
           })
+
+          setRecentSubmissions(submissions.slice(0, 5))
         } else {
+          // Student logic will be added in next commit
           setStats({
-            assignments: assignmentsRes.data.filter(a => a.published).length,
+            assignments: assignmentsRes.data.filter((a) => a.published).length,
             submissions: 0,
+            pendingSubmissions: 0,
           })
         }
 
@@ -71,7 +94,7 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Stats Cards - Previous code here */}
+      {/* Stats Cards */}
       <Row className="mb-4">
         <Col md={3} sm={6} className="mb-3">
           <Card className="text-center h-100 border-primary">
@@ -84,10 +107,45 @@ const Dashboard = () => {
             </Card.Body>
           </Card>
         </Col>
-        {/* Other stat cards... */}
+
+        {user.role === "admin" && (
+          <Col md={3} sm={6} className="mb-3">
+            <Card className="text-center h-100 border-success">
+              <Card.Body>
+                <h3 className="h5 text-muted">Students</h3>
+                <h2 className="display-4 text-success">{stats.students}</h2>
+                <Link to="/students" className="btn btn-outline-success btn-sm">
+                  Manage Students
+                </Link>
+              </Card.Body>
+            </Card>
+          </Col>
+        )}
+
+        <Col md={3} sm={6} className="mb-3">
+          <Card className="text-center h-100 border-info">
+            <Card.Body>
+              <h3 className="h5 text-muted">Submissions</h3>
+              <h2 className="display-4 text-info">{stats.submissions}</h2>
+              <Link to="/assignments" className="btn btn-outline-info btn-sm">
+                View All
+              </Link>
+            </Card.Body>
+          </Card>
+        </Col>
+
+        <Col md={3} sm={6} className="mb-3">
+          <Card className="text-center h-100 border-warning">
+            <Card.Body>
+              <h3 className="h5 text-muted">Pending Grading</h3>
+              <h2 className="display-4 text-warning">{stats.pendingSubmissions}</h2>
+              <small className="text-muted">Needs attention</small>
+            </Card.Body>
+          </Card>
+        </Col>
       </Row>
 
-      {/* Recent Assignments */}
+      {/* Recent Items */}
       <Row>
         <Col md={6} className="mb-4">
           <Card className="h-100">
