@@ -1,5 +1,6 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
+import axios from "axios"
 import { Card, Form, Button } from "react-bootstrap"
 
 const UpdateStudentPage = () => {
@@ -11,9 +12,43 @@ const UpdateStudentPage = () => {
     studentId: "",
   })
   const [loading, setLoading] = useState(true)
-  
   const navigate = useNavigate()
   const { id } = useParams()
+
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api"
+
+  useEffect(() => {
+    const fetchStudent = async () => {
+      try {
+        const token = localStorage.getItem("token")
+        const response = await axios.get(`${API_URL}/users/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        const { fullName, email, studentId, gender } = response.data
+
+        // Split fullName into firstname and lastname
+        const nameParts = fullName.split(" ")
+        const firstname = nameParts[0] || ""
+        const lastname = nameParts.slice(1).join(" ") || ""
+
+        setData({
+          firstname,
+          lastname,
+          gender: gender || "",
+          email,
+          studentId,
+        })
+        setLoading(false)
+      } catch (err) {
+        console.error("Failed to fetch student data:", err)
+        setLoading(false)
+      }
+    }
+
+    fetchStudent()
+  }, [id, API_URL])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -26,11 +61,7 @@ const UpdateStudentPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault()
     console.log("Form submitted:", data)
-    console.log("Student ID from URL:", id)
   }
-
-  // Simulate loading for now
-  setTimeout(() => setLoading(false), 1000)
 
   if (loading) return <div className="d-flex justify-content-center p-5">Loading student data...</div>
 
