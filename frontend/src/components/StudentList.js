@@ -90,6 +90,11 @@ const StudentList = () => {
                       <Button variant="danger" size="sm" onClick={() => handleDeleteStudent(student._id)}>
                         Delete
                       </Button>
+                      <Link to={`/students/${student._id}/submissions`}>
+                        <Button variant="info" size="sm">
+                          View Submissions
+                        </Button>
+                      </Link>
                     </div>
                   </td>
                 </tr>
