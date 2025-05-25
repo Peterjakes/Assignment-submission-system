@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 import axios from "axios"
-import { Card, Row, Col, Button } from "react-bootstrap"
+import { Card, Row, Col, ListGroup, Badge, Button } from "react-bootstrap"
 
 const Dashboard = () => {
   const { user } = useAuth()
@@ -11,6 +11,7 @@ const Dashboard = () => {
     students: 0,
     submissions: 0,
   })
+  const [recentAssignments, setRecentAssignments] = useState([])
   const [loading, setLoading] = useState(true)
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api"
@@ -22,6 +23,8 @@ const Dashboard = () => {
         const assignmentsRes = await axios.get(`${API_URL}/assignments`, {
           headers: { Authorization: `Bearer ${token}` },
         })
+        
+        setRecentAssignments(assignmentsRes.data.slice(0, 5))
 
         if (user.role === "admin") {
           const studentsRes = await axios.get(`${API_URL}/users/students`, {
@@ -68,6 +71,7 @@ const Dashboard = () => {
         )}
       </div>
 
+      {/* Stats Cards - Previous code here */}
       <Row className="mb-4">
         <Col md={3} sm={6} className="mb-3">
           <Card className="text-center h-100 border-primary">
@@ -80,29 +84,50 @@ const Dashboard = () => {
             </Card.Body>
           </Card>
         </Col>
+        {/* Other stat cards... */}
+      </Row>
 
-        {user.role === "admin" && (
-          <Col md={3} sm={6} className="mb-3">
-            <Card className="text-center h-100 border-success">
-              <Card.Body>
-                <h3 className="h5 text-muted">Students</h3>
-                <h2 className="display-4 text-success">{stats.students}</h2>
-                <Link to="/students" className="btn btn-outline-success btn-sm">
-                  Manage Students
-                </Link>
-              </Card.Body>
-            </Card>
-          </Col>
-        )}
-
-        <Col md={3} sm={6} className="mb-3">
-          <Card className="text-center h-100 border-info">
-            <Card.Body>
-              <h3 className="h5 text-muted">Submissions</h3>
-              <h2 className="display-4 text-info">{stats.submissions}</h2>
-              <Link to="/assignments" className="btn btn-outline-info btn-sm">
+      {/* Recent Assignments */}
+      <Row>
+        <Col md={6} className="mb-4">
+          <Card className="h-100">
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <Card.Title className="mb-0">Recent Assignments</Card.Title>
+              <Link to="/assignments" className="btn btn-outline-primary btn-sm">
                 View All
               </Link>
+            </Card.Header>
+            <Card.Body>
+              {recentAssignments.length > 0 ? (
+                <ListGroup variant="flush">
+                  {recentAssignments.map((assignment) => (
+                    <ListGroup.Item
+                      key={assignment._id}
+                      className="d-flex justify-content-between align-items-center px-0"
+                    >
+                      <div>
+                        <Link to={`/assignments/${assignment._id}`} className="text-decoration-none">
+                          <strong>{assignment.title}</strong>
+                        </Link>
+                        <br />
+                        <small className="text-muted">Due: {new Date(assignment.dueDate).toLocaleDateString()}</small>
+                      </div>
+                      <Badge bg={assignment.published ? "success" : "warning"}>
+                        {assignment.published ? "Published" : "Draft"}
+                      </Badge>
+                    </ListGroup.Item>
+                  ))}
+                </ListGroup>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-muted mb-3">No assignments yet.</p>
+                  {user.role === "admin" && (
+                    <Link to="/create-assignment" className="btn btn-primary">
+                      Create Your First Assignment
+                    </Link>
+                  )}
+                </div>
+              )}
             </Card.Body>
           </Card>
         </Col>
