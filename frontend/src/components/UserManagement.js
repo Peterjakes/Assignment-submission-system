@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react"
 import { toast } from "react-toastify"
 import axios from "axios"
-import { Card, Table, Button, Badge, Form } from "react-bootstrap"
+import { Card, Table, Button, Badge, Form, Row, Col } from "react-bootstrap"
 
 const UserManagement = () => {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [filter, setFilter] = useState("all")
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api"
 
@@ -71,6 +72,11 @@ const UserManagement = () => {
     }
   }
 
+  const filteredUsers = users.filter((user) => {
+    if (filter === "all") return true
+    return user.role === filter
+  })
+
   if (loading) return <div className="d-flex justify-content-center p-5">Loading users...</div>
   if (error) return <div className="alert alert-danger">{error}</div>
 
@@ -80,6 +86,20 @@ const UserManagement = () => {
         <Card.Title>User Management</Card.Title>
       </Card.Header>
       <Card.Body>
+        <Row className="mb-3">
+          <Col md={4}>
+            <Form.Group>
+              <Form.Label>Filter by Role</Form.Label>
+              <Form.Select value={filter} onChange={(e) => setFilter(e.target.value)}>
+                <option value="all">All Users</option>
+                <option value="admin">Admins</option>
+                <option value="lecturer">Lecturers</option>
+                <option value="student">Students</option>
+              </Form.Select>
+            </Form.Group>
+          </Col>
+        </Row>
+
         <Table striped bordered hover responsive>
           <thead>
             <tr>
@@ -92,7 +112,7 @@ const UserManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
+            {filteredUsers.map((user) => (
               <tr key={user._id}>
                 <td>{user.fullName}</td>
                 <td>{user.email}</td>
