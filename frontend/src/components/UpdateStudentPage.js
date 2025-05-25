@@ -6,9 +6,11 @@ const UpdateStudentPage = () => {
   const [data, setData] = useState({
     firstname: "",
     lastname: "",
+    gender: "",
     email: "",
     studentId: "",
   })
+  const [loading, setLoading] = useState(true)
   
   const navigate = useNavigate()
   const { id } = useParams()
@@ -26,6 +28,11 @@ const UpdateStudentPage = () => {
     console.log("Form submitted:", data)
     console.log("Student ID from URL:", id)
   }
+
+  // Simulate loading for now
+  setTimeout(() => setLoading(false), 1000)
+
+  if (loading) return <div className="d-flex justify-content-center p-5">Loading student data...</div>
 
   return (
     <div className="d-flex align-items-center justify-content-center">
@@ -74,6 +81,20 @@ const UpdateStudentPage = () => {
                 onChange={handleChange}
                 required 
               />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Gender</Form.Label>
+              <Form.Select 
+                name="gender" 
+                value={data.gender} 
+                onChange={handleChange} 
+                required
+              >
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </Form.Select>
             </Form.Group>
             <div className="d-flex justify-content-end">
               <Button 
