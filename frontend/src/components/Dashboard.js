@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "../contexts/AuthContext"
+import axios from "axios"
 import { Card, Row, Col } from "react-bootstrap"
 
 const Dashboard = () => {
@@ -14,11 +15,29 @@ const Dashboard = () => {
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api"
 
   useEffect(() => {
-    // TODO: Fetch dashboard data
-    setLoading(false)
-  }, [user])
+    const fetchDashboardData = async () => {
+      try {
+        const token = sessionStorage.getItem("token")
+        const assignmentsRes = await axios.get(`${API_URL}/assignments`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        
+        setStats(prev => ({
+          ...prev,
+          assignments: assignmentsRes.data.length,
+        }))
+        
+        setLoading(false)
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error)
+        setLoading(false)
+      }
+    }
 
-  if (loading) return <div>Loading...</div>
+    fetchDashboardData()
+  }, [user, API_URL])
+
+  if (loading) return <div>Loading dashboard...</div>
 
   return (
     <>
@@ -28,10 +47,10 @@ const Dashboard = () => {
 
       <Row className="mb-4">
         <Col md={4}>
-          <Card className="text-center">
+          <Card className="text-center border-primary">
             <Card.Body>
-              <h3>Assignments</h3>
-              <h2>{stats.assignments}</h2>
+              <h3 className="text-muted">Assignments</h3>
+              <h2 className="text-primary">{stats.assignments}</h2>
             </Card.Body>
           </Card>
         </Col>
