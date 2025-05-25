@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
+import { toast } from "react-toastify"
 import axios from "axios"
 import { Card, Form, Button } from "react-bootstrap"
 
@@ -12,6 +13,7 @@ const UpdateStudentPage = () => {
     studentId: "",
   })
   const [loading, setLoading] = useState(true)
+  const [updating, setUpdating] = useState(false)
   const navigate = useNavigate()
   const { id } = useParams()
 
@@ -42,8 +44,9 @@ const UpdateStudentPage = () => {
         })
         setLoading(false)
       } catch (err) {
-        console.error("Failed to fetch student data:", err)
+        toast.error("Failed to fetch student data")
         setLoading(false)
+        console.error(err)
       }
     }
 
@@ -58,9 +61,36 @@ const UpdateStudentPage = () => {
     }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log("Form submitted:", data)
+    setUpdating(true)
+
+    try {
+      const token = localStorage.getItem("token")
+
+      // Transform the data to match API expectations
+      const studentData = {
+        fullName: `${data.firstname} ${data.lastname}`,
+        email: data.email,
+        studentId: data.studentId,
+        gender: data.gender,
+      }
+
+      await axios.put(`${API_URL}/users/${id}`, studentData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+
+      toast.success("Student updated successfully!")
+      navigate("/students")
+    } catch (err) {
+      toast.error("Failed to update student")
+      console.error(err)
+    } finally {
+      setUpdating(false)
+    }
   }
 
   if (loading) return <div className="d-flex justify-content-center p-5">Loading student data...</div>
@@ -135,8 +165,8 @@ const UpdateStudentPage = () => {
               >
                 Cancel
               </Button>
-              <Button variant="primary" type="submit">
-                Update Student
+              <Button variant="primary" type="submit" disabled={updating}>
+                {updating ? "Updating..." : "Update Student"}
               </Button>
             </div>
           </Form>
