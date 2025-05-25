@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
+import { toast } from "react-toastify"
 import axios from "axios"
 import { Card, Table, Button } from "react-bootstrap"
 
@@ -30,6 +31,24 @@ const StudentList = () => {
 
     fetchStudents()
   }, [API_URL])
+
+  const handleDeleteStudent = async (id) => {
+    if (window.confirm("Are you sure you want to delete this student?")) {
+      try {
+        const token = localStorage.getItem("token")
+        await axios.delete(`${API_URL}/users/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        setStudents(students.filter((student) => student._id !== id))
+        toast.success("Student deleted successfully")
+      } catch (err) {
+        toast.error("Failed to delete student")
+        console.error(err)
+      }
+    }
+  }
 
   if (loading) return <div className="d-flex justify-content-center p-5">Loading students...</div>
   if (error) return <div className="alert alert-danger">{error}</div>
@@ -68,6 +87,9 @@ const StudentList = () => {
                           Edit
                         </Button>
                       </Link>
+                      <Button variant="danger" size="sm" onClick={() => handleDeleteStudent(student._id)}>
+                        Delete
+                      </Button>
                     </div>
                   </td>
                 </tr>
