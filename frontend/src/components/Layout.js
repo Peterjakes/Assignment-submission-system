@@ -1,7 +1,10 @@
 import { Outlet, NavLink } from "react-router-dom"
+import { useAuth } from "../contexts/AuthContext"
 import { Navbar, Container, Nav } from "react-bootstrap"
 
 const Layout = () => {
+  const { user } = useAuth()
+
   return (
     <div>
       <Navbar bg="primary" variant="dark" expand="lg">
@@ -19,6 +22,9 @@ const Layout = () => {
                 Assignments
               </Nav.Link>
             </Nav>
+            <Navbar.Text className="me-3">
+              Welcome, <strong>{user?.fullName}</strong>
+            </Navbar.Text>
           </Navbar.Collapse>
         </Container>
       </Navbar>
