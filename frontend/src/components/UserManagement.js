@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { toast } from "react-toastify"
 import axios from "axios"
-import { Card, Table, Button } from "react-bootstrap"
+import { Card, Table, Button, Badge } from "react-bootstrap"
 
 const UserManagement = () => {
   const [users, setUsers] = useState([])
@@ -65,6 +65,7 @@ const UserManagement = () => {
               <th>Email</th>
               <th>Username</th>
               <th>Role</th>
+              <th>Student ID</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -74,7 +75,12 @@ const UserManagement = () => {
                 <td>{user.fullName}</td>
                 <td>{user.email}</td>
                 <td>{user.username}</td>
-                <td>{user.role}</td>
+                <td>
+                  <Badge bg={user.role === "admin" ? "danger" : user.role === "lecturer" ? "warning" : "primary"}>
+                    {user.role}
+                  </Badge>
+                </td>
+                <td>{user.studentId || "N/A"}</td>
                 <td>
                   <Button variant="danger" size="sm" onClick={() => handleDeleteUser(user._id)}>
                     Delete
