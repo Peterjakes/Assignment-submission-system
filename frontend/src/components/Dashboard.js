@@ -28,15 +28,18 @@ const Dashboard = () => {
         setRecentAssignments(assignmentsRes.data.slice(0, 5))
 
         if (user.role === "admin") {
+          // Admin dashboard data
           const studentsRes = await axios.get(`${API_URL}/users/students`, {
             headers: { Authorization: `Bearer ${token}` },
           })
 
           const assignments = assignmentsRes.data
+          const students = studentsRes.data
+
+          // For submissions, we'd need to fetch all submissions or get a count
           let submissions = []
           let pendingCount = 0
 
-          // Fetch submissions for first few assignments
           for (const assignment of assignments.slice(0, 3)) {
             try {
               const submissionsRes = await axios.get(`${API_URL}/assignments/${assignment._id}/submissions`, {
@@ -45,25 +48,42 @@ const Dashboard = () => {
               submissions = [...submissions, ...submissionsRes.data]
               pendingCount += submissionsRes.data.filter((s) => s.status !== "graded").length
             } catch (err) {
+              // Handle case where submissions endpoint might not exist yet
               console.log("Submissions endpoint not available yet")
             }
           }
 
           setStats({
             assignments: assignments.length,
-            students: studentsRes.data.length,
+            students: students.length,
             submissions: submissions.length,
             pendingSubmissions: pendingCount,
           })
 
           setRecentSubmissions(submissions.slice(0, 5))
         } else {
-          // Student logic will be added in next commit
-          setStats({
-            assignments: assignmentsRes.data.filter((a) => a.published).length,
-            submissions: 0,
-            pendingSubmissions: 0,
-          })
+          // Student dashboard data
+          try {
+            const mySubmissionsRes = await axios.get(`${API_URL}/assignments/my-submissions`, {
+              headers: { Authorization: `Bearer ${token}` },
+            })
+            const submissions = mySubmissionsRes.data
+
+            setStats({
+              assignments: assignmentsRes.data.filter((a) => a.published).length,
+              submissions: submissions.length,
+              pendingSubmissions: submissions.filter((s) => s.status !== "graded").length,
+            })
+
+            setRecentSubmissions(submissions.slice(0, 5))
+          } catch (err) {
+            // Handle case where my-submissions endpoint might not exist yet
+            setStats({
+              assignments: assignmentsRes.data.filter((a) => a.published).length,
+              submissions: 0,
+              pendingSubmissions: 0,
+            })
+          }
         }
 
         setLoading(false)
@@ -127,7 +147,10 @@ const Dashboard = () => {
             <Card.Body>
               <h3 className="h5 text-muted">Submissions</h3>
               <h2 className="display-4 text-info">{stats.submissions}</h2>
-              <Link to="/assignments" className="btn btn-outline-info btn-sm">
+              <Link
+                to={user.role === "admin" ? "/assignments" : "/my-submissions"}
+                className="btn btn-outline-info btn-sm"
+              >
                 View All
               </Link>
             </Card.Body>
@@ -137,7 +160,7 @@ const Dashboard = () => {
         <Col md={3} sm={6} className="mb-3">
           <Card className="text-center h-100 border-warning">
             <Card.Body>
-              <h3 className="h5 text-muted">Pending Grading</h3>
+              <h3 className="h5 text-muted">{user.role === "admin" ? "Pending Grading" : "Pending Feedback"}</h3>
               <h2 className="display-4 text-warning">{stats.pendingSubmissions}</h2>
               <small className="text-muted">Needs attention</small>
             </Card.Body>
@@ -184,6 +207,56 @@ const Dashboard = () => {
                       Create Your First Assignment
                     </Link>
                   )}
+                </div>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+
+        <Col md={6} className="mb-4">
+          <Card className="h-100">
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <Card.Title className="mb-0">Recent Submissions</Card.Title>
+              <Link
+                to={user.role === "admin" ? "/assignments" : "/my-submissions"}
+                className="btn btn-outline-primary btn-sm"
+              >
+                View All
+              </Link>
+            </Card.Header>
+            <Card.Body>
+              {recentSubmissions.length > 0 ? (
+                <ListGroup variant="flush">
+                  {recentSubmissions.map((submission) => (
+                    <ListGroup.Item
+                      key={submission._id}
+                      className="d-flex justify-content-between align-items-center px-0"
+                    >
+                      <div>
+                        <Link to={`/assignments/${submission.assignment._id}`} className="text-decoration-none">
+                          <strong>{submission.assignment.title}</strong>
+                        </Link>
+                        <br />
+                        <small className="text-muted">
+                          {user.role === "admin" ? `By: ${submission.student?.fullName}` : "Your submission"}
+                        </small>
+                      </div>
+                      <div className="text-end">
+                        <Badge bg={submission.status === "graded" ? "success" : "warning"}>{submission.status}</Badge>
+                        {submission.status === "graded" && (
+                          <div>
+                            <Badge bg="info" className="mt-1">
+                              {submission.marks}/{submission.assignment.totalMarks}
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+                    </ListGroup.Item>
+                  ))}
+                </ListGroup>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-muted mb-0">No submissions yet.</p>
                 </div>
               )}
             </Card.Body>
