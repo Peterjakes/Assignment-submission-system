@@ -12,7 +12,7 @@ const Layout = () => {
   }
 
   return (
-    <div>
+    <div className="d-flex flex-column min-vh-100">
       <Navbar bg="primary" variant="dark" expand="lg">
         <Container>
           <Navbar.Brand as={NavLink} to="/dashboard">
@@ -63,9 +63,15 @@ const Layout = () => {
         </Container>
       </Navbar>
 
-      <Container>
+      <Container className="flex-grow-1 py-4">
         <Outlet />
       </Container>
+
+      <footer className="bg-light py-3 text-center">
+        <Container>
+          <p className="text-muted mb-0">Assignment Submission System &copy; {new Date().getFullYear()}</p>
+        </Container>
+      </footer>
     </div>
   )
 }
