@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { toast } from "react-toastify"
 import axios from "axios"
-import { Card, Table, Button, Badge } from "react-bootstrap"
+import { Card, Table, Button, Badge, Form } from "react-bootstrap"
 
 const UserManagement = () => {
   const [users, setUsers] = useState([])
@@ -49,6 +49,28 @@ const UserManagement = () => {
     }
   }
 
+  const handleRoleChange = async (userId, newRole) => {
+    try {
+      const token = sessionStorage.getItem("token")
+      await axios.patch(
+        `${API_URL}/users/${userId}/role`,
+        { role: newRole },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      )
+
+      setUsers(users.map((user) => (user._id === userId ? { ...user, role: newRole } : user)))
+      toast.success("User role updated successfully")
+    } catch (err) {
+      toast.error("Failed to update user role")
+      console.error(err)
+    }
+  }
+
   if (loading) return <div className="d-flex justify-content-center p-5">Loading users...</div>
   if (error) return <div className="alert alert-danger">{error}</div>
 
@@ -82,9 +104,21 @@ const UserManagement = () => {
                 </td>
                 <td>{user.studentId || "N/A"}</td>
                 <td>
-                  <Button variant="danger" size="sm" onClick={() => handleDeleteUser(user._id)}>
-                    Delete
-                  </Button>
+                  <div className="d-flex gap-2">
+                    <Form.Select
+                      size="sm"
+                      value={user.role}
+                      onChange={(e) => handleRoleChange(user._id, e.target.value)}
+                      style={{ width: "120px" }}
+                    >
+                      <option value="student">Student</option>
+                      <option value="lecturer">Lecturer</option>
+                      <option value="admin">Admin</option>
+                    </Form.Select>
+                    <Button variant="danger" size="sm" onClick={() => handleDeleteUser(user._id)}>
+                      Delete
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}
