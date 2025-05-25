@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
+import { toast } from "react-toastify"
 import axios from "axios"
-import { Card, Table } from "react-bootstrap"
+import { Card, Table, Button } from "react-bootstrap"
 
 const UserManagement = () => {
   const [users, setUsers] = useState([])
@@ -30,6 +31,24 @@ const UserManagement = () => {
     fetchUsers()
   }, [API_URL])
 
+  const handleDeleteUser = async (id) => {
+    if (window.confirm("Are you sure you want to delete this user?")) {
+      try {
+        const token = sessionStorage.getItem("token")
+        await axios.delete(`${API_URL}/users/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        setUsers(users.filter((user) => user._id !== id))
+        toast.success("User deleted successfully")
+      } catch (err) {
+        toast.error("Failed to delete user")
+        console.error(err)
+      }
+    }
+  }
+
   if (loading) return <div className="d-flex justify-content-center p-5">Loading users...</div>
   if (error) return <div className="alert alert-danger">{error}</div>
 
@@ -46,6 +65,7 @@ const UserManagement = () => {
               <th>Email</th>
               <th>Username</th>
               <th>Role</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -55,6 +75,11 @@ const UserManagement = () => {
                 <td>{user.email}</td>
                 <td>{user.username}</td>
                 <td>{user.role}</td>
+                <td>
+                  <Button variant="danger" size="sm" onClick={() => handleDeleteUser(user._id)}>
+                    Delete
+                  </Button>
+                </td>
               </tr>
             ))}
           </tbody>
