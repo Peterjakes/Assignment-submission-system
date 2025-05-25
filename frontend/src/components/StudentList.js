@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import axios from "axios"
-import { Card } from "react-bootstrap"
+import { Card, Table } from "react-bootstrap"
 
 const StudentList = () => {
   const [students, setStudents] = useState([])
@@ -46,14 +46,26 @@ const StudentList = () => {
         {students.length === 0 ? (
           <p className="text-center">No students found.</p>
         ) : (
-          <div>
-            {students.map((student) => (
-              <div key={student._id} className="mb-2">
-                <strong>{student.fullName}</strong> - {student.email}
-                {student.studentId && <span> (ID: {student.studentId})</span>}
-              </div>
-            ))}
-          </div>
+          <Table striped bordered hover responsive>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Student ID</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {students.map((student) => (
+                <tr key={student._id}>
+                  <td>{student.fullName}</td>
+                  <td>{student.email}</td>
+                  <td>{student.studentId}</td>
+                  <td>Actions will go here</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
         )}
       </Card.Body>
     </Card>
