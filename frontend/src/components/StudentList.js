@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
+import { Link } from "react-router-dom"
 import axios from "axios"
-import { Card, Table } from "react-bootstrap"
+import { Card, Table, Button } from "react-bootstrap"
 
 const StudentList = () => {
   const [students, setStudents] = useState([])
@@ -13,10 +14,6 @@ const StudentList = () => {
     const fetchStudents = async () => {
       try {
         const token = localStorage.getItem("token")
-        if (!token) {
-          throw new Error("No authentication token found")
-        }
-        
         const response = await axios.get(`${API_URL}/users/students`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -39,8 +36,11 @@ const StudentList = () => {
 
   return (
     <Card>
-      <Card.Header>
+      <Card.Header className="d-flex justify-content-between align-items-center">
         <Card.Title>Student List</Card.Title>
+        <Link to="/add-student">
+          <Button variant="primary">Add New Student</Button>
+        </Link>
       </Card.Header>
       <Card.Body>
         {students.length === 0 ? (
@@ -61,7 +61,15 @@ const StudentList = () => {
                   <td>{student.fullName}</td>
                   <td>{student.email}</td>
                   <td>{student.studentId}</td>
-                  <td>Actions will go here</td>
+                  <td>
+                    <div className="d-flex gap-2">
+                      <Link to={`/update-student/${student._id}`}>
+                        <Button variant="success" size="sm">
+                          Edit
+                        </Button>
+                      </Link>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
