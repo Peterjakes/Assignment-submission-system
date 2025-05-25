@@ -68,7 +68,7 @@ const UpdateStudentPage = () => {
     try {
       const token = localStorage.getItem("token")
 
-      // Transform the data to match API expectations
+      // Transform the data to match your API expectations
       const studentData = {
         fullName: `${data.firstname} ${data.lastname}`,
         email: data.email,
@@ -86,7 +86,7 @@ const UpdateStudentPage = () => {
       toast.success("Student updated successfully!")
       navigate("/students")
     } catch (err) {
-      toast.error("Failed to update student")
+      toast.error(err.response?.data?.error?.message || "Failed to update student")
       console.error(err)
     } finally {
       setUpdating(false)
@@ -105,52 +105,23 @@ const UpdateStudentPage = () => {
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
               <Form.Label>First Name</Form.Label>
-              <Form.Control 
-                type="text" 
-                name="firstname"
-                value={data.firstname}
-                onChange={handleChange}
-                required 
-              />
+              <Form.Control type="text" name="firstname" value={data.firstname} onChange={handleChange} required />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Last Name</Form.Label>
-              <Form.Control 
-                type="text" 
-                name="lastname"
-                value={data.lastname}
-                onChange={handleChange}
-                required 
-              />
+              <Form.Control type="text" name="lastname" value={data.lastname} onChange={handleChange} required />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Email</Form.Label>
-              <Form.Control 
-                type="email" 
-                name="email"
-                value={data.email}
-                onChange={handleChange}
-                required 
-              />
+              <Form.Control type="email" name="email" value={data.email} onChange={handleChange} required />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Student ID</Form.Label>
-              <Form.Control 
-                type="text" 
-                name="studentId"
-                value={data.studentId}
-                onChange={handleChange}
-                required 
-              />
+              <Form.Control type="text" name="studentId" value={data.studentId} onChange={handleChange} required />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Gender</Form.Label>
-              <Form.Select 
-                name="gender" 
-                value={data.gender} 
-                onChange={handleChange} 
-                required
-              >
+              <Form.Select name="gender" value={data.gender} onChange={handleChange} required>
                 <option value="">Select gender</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
@@ -158,11 +129,7 @@ const UpdateStudentPage = () => {
               </Form.Select>
             </Form.Group>
             <div className="d-flex justify-content-end">
-              <Button 
-                variant="secondary" 
-                className="me-2" 
-                onClick={() => navigate("/students")}
-              >
+              <Button variant="secondary" className="me-2" onClick={() => navigate("/students")}>
                 Cancel
               </Button>
               <Button variant="primary" type="submit" disabled={updating}>
