@@ -1,8 +1,8 @@
 import { Navigate, Outlet } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 
-const ProtectedRoute = () => {
-  const { isAuthenticated, loading } = useAuth()
+const ProtectedRoute = ({ allowedRoles }) => {
+  const { isAuthenticated, user, loading } = useAuth()
 
   // Show loading state while checking authentication
   if (loading) {
@@ -14,7 +14,12 @@ const ProtectedRoute = () => {
     return <Navigate to="/login" replace />
   }
 
-  // Render children if authenticated
+  // Check role if specified
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/dashboard" replace />
+  }
+
+  // Render children if authenticated and authorized
   return <Outlet />
 }
 
