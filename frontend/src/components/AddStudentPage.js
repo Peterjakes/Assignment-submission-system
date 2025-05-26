@@ -12,19 +12,19 @@ function AddStudentPage() {
     lastname: "",
     gender: "",
   })
-  
+
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api"
-  
+
   const handleChange = (e) => {
     setData({ ...data, [e.target.name]: e.target.value })
   }
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
       setLoading(true)
-      const token = localStorage.getItem("token")
-      
+      const token = sessionStorage.getItem("token")
+
       // Transform the data to match your API expectations
       const studentData = {
         username: `${data.firstname.toLowerCase()}.${data.lastname.toLowerCase()}`,
@@ -35,14 +35,14 @@ function AddStudentPage() {
         role: "student",
         gender: data.gender,
       }
-      
+
       await axios.post(`${API_URL}/users`, studentData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       })
-      
+
       toast.success("Student added successfully!")
       setData({
         firstname: "",
@@ -57,7 +57,7 @@ function AddStudentPage() {
       setLoading(false)
     }
   }
-  
+
   return (
     <div className="d-flex align-items-center justify-content-center">
       <Card className="w-100" style={{ maxWidth: "500px" }}>
