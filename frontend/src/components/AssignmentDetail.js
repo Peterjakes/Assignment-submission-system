@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
 import axios from "axios"
-import { Card, Button, Badge } from "react-bootstrap"
+import { Card, Button, Badge, Form, Modal } from "react-bootstrap"
 import { useAuth } from "../contexts/AuthContext"
 
 const AssignmentDetail = () => {
@@ -11,6 +11,9 @@ const AssignmentDetail = () => {
   const { user } = useAuth()
   const [assignment, setAssignment] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [showSubmitModal, setShowSubmitModal] = useState(false)
+  const [submissionContent, setSubmissionContent] = useState("")
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api"
 
@@ -30,6 +33,38 @@ const AssignmentDetail = () => {
       console.error("Error fetching assignment:", error)
       toast.error("Failed to load assignment")
       setLoading(false)
+    }
+  }
+
+  const handleSubmit = async () => {
+    if (!submissionContent.trim()) {
+      toast.error("Please enter your submission content")
+      return
+    }
+
+    try {
+      setSubmitting(true)
+      const token = sessionStorage.getItem("token")
+
+      await axios.post(
+        `${API_URL}/assignments/${id}/submit`,
+        { content: submissionContent },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      )
+
+      toast.success("Assignment submitted successfully!")
+      setShowSubmitModal(false)
+      setSubmissionContent("")
+    } catch (error) {
+      toast.error("Failed to submit assignment")
+      console.error("Submit error:", error)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -56,7 +91,7 @@ const AssignmentDetail = () => {
   if (!assignment) return <div className="alert alert-danger">Assignment not found</div>
 
   return (
-    <div>
+    <>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h2>{assignment.title}</h2>
@@ -92,9 +127,51 @@ const AssignmentDetail = () => {
           </p>
           <p><strong>Total Points:</strong> {assignment.totalMarks}</p>
           <p><strong>Created By:</strong> {assignment.createdBy?.fullName}</p>
+          
+          {user.role === "student" && assignment.published && (
+            <div className="mt-3">
+              <Button 
+                variant={isOverdue(assignment.dueDate) ? "warning" : "primary"}
+                onClick={() => setShowSubmitModal(true)}
+              >
+                {isOverdue(assignment.dueDate) ? "Submit Late" : "Submit Assignment"}
+              </Button>
+            </div>
+          )}
         </Card.Body>
       </Card>
-    </div>
+
+      {/* Submit Modal */}
+      <Modal show={showSubmitModal} onHide={() => setShowSubmitModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Submit Assignment</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group>
+            <Form.Label>Your Answer</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={8}
+              value={submissionContent}
+              onChange={(e) => setSubmissionContent(e.target.value)}
+              placeholder="Enter your solution here..."
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowSubmitModal(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            disabled={submitting || !submissionContent.trim()}
+          >
+            {submitting ? "Submitting..." : "Submit"}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
   )
 }
 
