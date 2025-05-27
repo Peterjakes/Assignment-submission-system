@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
 import axios from "axios"
-import { Card, Button, Badge, Form, Modal } from "react-bootstrap"
+import { Card, Button, Badge, Form, Alert, Modal } from "react-bootstrap"
 import { useAuth } from "../contexts/AuthContext"
 
 const AssignmentDetail = () => {
@@ -10,6 +10,7 @@ const AssignmentDetail = () => {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [assignment, setAssignment] = useState(null)
+  const [submission, setSubmission] = useState(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [showSubmitModal, setShowSubmitModal] = useState(false)
@@ -18,16 +19,27 @@ const AssignmentDetail = () => {
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api"
 
   useEffect(() => {
-    fetchAssignment()
+    fetchAssignmentData()
   }, [id])
 
-  const fetchAssignment = async () => {
+  const fetchAssignmentData = async () => {
     try {
       const token = sessionStorage.getItem("token")
       const headers = { Authorization: `Bearer ${token}` }
-      
-      const response = await axios.get(`${API_URL}/assignments/${id}`, { headers })
-      setAssignment(response.data)
+
+      const assignmentRes = await axios.get(`${API_URL}/assignments/${id}`, { headers })
+      setAssignment(assignmentRes.data)
+
+      if (user.role === "student") {
+        try {
+          const submissionsRes = await axios.get(`${API_URL}/assignments/${id}/submissions`, { headers })
+          const mySubmission = submissionsRes.data.find((sub) => sub.student._id === user.id)
+          setSubmission(mySubmission)
+        } catch (err) {
+          console.log("No submissions found")
+        }
+      }
+
       setLoading(false)
     } catch (error) {
       console.error("Error fetching assignment:", error)
@@ -60,12 +72,17 @@ const AssignmentDetail = () => {
       toast.success("Assignment submitted successfully!")
       setShowSubmitModal(false)
       setSubmissionContent("")
+      fetchAssignmentData() // Refresh to show the submission
     } catch (error) {
-      toast.error("Failed to submit assignment")
+      toast.error(error.response?.data?.error?.message || "Failed to submit assignment")
       console.error("Submit error:", error)
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleString()
   }
 
   const isOverdue = (dueDate) => {
@@ -122,21 +139,40 @@ const AssignmentDetail = () => {
           </div>
           <p><strong>Due Date:</strong> 
             <span className={isOverdue(assignment.dueDate) ? "text-danger" : "text-success"}>
-              {new Date(assignment.dueDate).toLocaleString()}
+              {formatDate(assignment.dueDate)}
             </span>
           </p>
           <p><strong>Total Points:</strong> {assignment.totalMarks}</p>
           <p><strong>Created By:</strong> {assignment.createdBy?.fullName}</p>
           
-          {user.role === "student" && assignment.published && (
-            <div className="mt-3">
-              <Button 
-                variant={isOverdue(assignment.dueDate) ? "warning" : "primary"}
-                onClick={() => setShowSubmitModal(true)}
-              >
-                {isOverdue(assignment.dueDate) ? "Submit Late" : "Submit Assignment"}
-              </Button>
-            </div>
+          {user.role === "student" && (
+            <Alert variant={submission ? "success" : isOverdue(assignment.dueDate) ? "danger" : "info"}>
+              {submission ? (
+                <div>
+                  <strong>✅ Submitted!</strong> You have already submitted this assignment.
+                  <div><small>Submitted: {formatDate(submission.submittedAt)}</small></div>
+                </div>
+              ) : assignment.published ? (
+                <div>
+                  <strong>{isOverdue(assignment.dueDate) ? "⚠️ Overdue:" : "📝 Ready to Submit:"}</strong>
+                  {isOverdue(assignment.dueDate) 
+                    ? " This assignment is past due." 
+                    : " You can submit your work."}
+                  <div className="mt-2">
+                    <Button
+                      variant={isOverdue(assignment.dueDate) ? "warning" : "primary"}
+                      onClick={() => setShowSubmitModal(true)}
+                    >
+                      {isOverdue(assignment.dueDate) ? "Submit Late" : "Submit Assignment"}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <strong>⏳ Not Available:</strong> This assignment is not yet published.
+                </div>
+              )}
+            </Alert>
           )}
         </Card.Body>
       </Card>
@@ -144,17 +180,17 @@ const AssignmentDetail = () => {
       {/* Submit Modal */}
       <Modal show={showSubmitModal} onHide={() => setShowSubmitModal(false)} size="lg">
         <Modal.Header closeButton>
-          <Modal.Title>Submit Assignment</Modal.Title>
+          <Modal.Title>Submit Assignment: {assignment.title}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form.Group>
             <Form.Label>Your Answer</Form.Label>
             <Form.Control
               as="textarea"
-              rows={8}
+              rows={10}
               value={submissionContent}
               onChange={(e) => setSubmissionContent(e.target.value)}
-              placeholder="Enter your solution here..."
+              placeholder="Enter your complete solution here..."
             />
           </Form.Group>
         </Modal.Body>
@@ -163,11 +199,11 @@ const AssignmentDetail = () => {
             Cancel
           </Button>
           <Button
-            variant="primary"
+            variant={isOverdue(assignment.dueDate) ? "warning" : "primary"}
             onClick={handleSubmit}
             disabled={submitting || !submissionContent.trim()}
           >
-            {submitting ? "Submitting..." : "Submit"}
+            {submitting ? "Submitting..." : isOverdue(assignment.dueDate) ? "Submit Late" : "Submit Assignment"}
           </Button>
         </Modal.Footer>
       </Modal>
