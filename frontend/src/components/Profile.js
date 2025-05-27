@@ -8,8 +8,8 @@ const Profile = () => {
   const [lastLogin, setLastLogin] = useState(null)
 
   useEffect(() => {
-    // You could fetch additional user details here if needed
-    // For now, we'll use the user data from context
+    
+    //  we'll use the user data from context
   }, [])
 
   const formatDate = (dateString) => {
