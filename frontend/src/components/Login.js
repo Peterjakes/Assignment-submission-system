@@ -1,10 +1,10 @@
 import { useState } from "react"
-import { useNavigate, Link } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 import { Card, Form, Button, Alert } from "react-bootstrap"
 
 const Login = () => {
-  const [email, setEmail] = useState("")
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const { login, loading, error } = useAuth()
   const navigate = useNavigate()
@@ -12,10 +12,17 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    const result = await login(email, password)
+    console.log("🔐 Login attempt:", { username, password: "***" })
+
+    const result = await login(username, password)
+
+    console.log("🔐 Login result:", result)
 
     if (result.success) {
+      console.log("✅ Login successful, navigating to dashboard...")
       navigate("/dashboard")
+    } else {
+      console.error("❌ Login failed:", result.error)
     }
   }
 
@@ -30,13 +37,25 @@ const Login = () => {
 
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
-              <Form.Label>Email</Form.Label>
-              <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Form.Label>Username</Form.Label>
+              <Form.Control
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your username"
+                required
+              />
             </Form.Group>
 
             <Form.Group className="mb-3">
               <Form.Label>Password</Form.Label>
-              <Form.Control type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <Form.Control
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+              />
             </Form.Group>
 
             <Button variant="primary" type="submit" disabled={loading} className="w-100 mt-3">
@@ -44,10 +63,14 @@ const Login = () => {
             </Button>
           </Form>
 
-          <div className="text-center mt-3">
-            <p>
-              Don't have an account? <Link to="/register">Register</Link>
-            </p>
+          <div className="text-center mt-4">
+            <Alert variant="light" className="mb-0">
+              <small>
+                <strong>Students:</strong> Use credentials provided by your administrator
+                <br />
+                <strong>Need help?</strong> Contact your system administrator
+              </small>
+            </Alert>
           </div>
         </Card.Body>
       </Card>

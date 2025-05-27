@@ -16,7 +16,7 @@ const AssignmentList = () => {
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
-        const token = localStorage.getItem("token")
+        const token = sessionStorage.getItem("token")
         const response = await axios.get(`${API_URL}/assignments`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -37,7 +37,7 @@ const AssignmentList = () => {
   const handleDeleteAssignment = async (id) => {
     if (window.confirm("Are you sure you want to delete this assignment?")) {
       try {
-        const token = localStorage.getItem("token")
+        const token = sessionStorage.getItem("token")
         await axios.delete(`${API_URL}/assignments/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -54,7 +54,7 @@ const AssignmentList = () => {
 
   const handlePublishAssignment = async (id) => {
     try {
-      const token = localStorage.getItem("token")
+      const token = sessionStorage.getItem("token")
       await axios.patch(
         `${API_URL}/assignments/${id}/publish`,
         {},

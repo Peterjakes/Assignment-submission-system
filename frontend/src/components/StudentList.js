@@ -14,7 +14,10 @@ const StudentList = () => {
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const token = localStorage.getItem("token")
+        // Changed from localStorage to sessionStorage
+        const token = sessionStorage.getItem("token")
+        console.log("📋 StudentList - Token found:", token ? "Yes" : "No") // Debug log
+        
         const response = await axios.get(`${API_URL}/users/students`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -25,7 +28,7 @@ const StudentList = () => {
       } catch (err) {
         setError("Failed to fetch students")
         setLoading(false)
-        console.error(err)
+        console.error("❌ StudentList fetch error:", err)
       }
     }
 
@@ -35,7 +38,8 @@ const StudentList = () => {
   const handleDeleteStudent = async (id) => {
     if (window.confirm("Are you sure you want to delete this student?")) {
       try {
-        const token = localStorage.getItem("token")
+        // Changed from localStorage to sessionStorage
+        const token = sessionStorage.getItem("token")
         await axios.delete(`${API_URL}/users/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,

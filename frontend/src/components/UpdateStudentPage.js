@@ -22,7 +22,7 @@ const UpdateStudentPage = () => {
   useEffect(() => {
     const fetchStudent = async () => {
       try {
-        const token = localStorage.getItem("token")
+        const token = sessionStorage.getItem("token")
         const response = await axios.get(`${API_URL}/users/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -66,7 +66,7 @@ const UpdateStudentPage = () => {
     setUpdating(true)
 
     try {
-      const token = localStorage.getItem("token")
+      const token =sessionStorage.getItem("token")
 
       // Transform the data to match your API expectations
       const studentData = {

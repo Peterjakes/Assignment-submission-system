@@ -29,7 +29,7 @@ const CreateAssignment = () => {
     e.preventDefault()
     try {
       setLoading(true)
-      const token = localStorage.getItem("token")
+      const token = sessionStorage.getItem("token")
 
       await axios.post(`${API_URL}/assignments`, formData, {
         headers: {
