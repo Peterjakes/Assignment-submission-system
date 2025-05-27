@@ -29,22 +29,26 @@ const AssignmentDetail = () => {
       const token = sessionStorage.getItem("token")
       const headers = { Authorization: `Bearer ${token}` }
 
+      // Fetch assignment details
       const assignmentRes = await axios.get(`${API_URL}/assignments/${id}`, { headers })
       setAssignment(assignmentRes.data)
 
       if (user.role === "student") {
+        // Check if student has already submitted
         try {
           const submissionsRes = await axios.get(`${API_URL}/assignments/${id}/submissions`, { headers })
           const mySubmission = submissionsRes.data.find((sub) => sub.student._id === user.id)
           setSubmission(mySubmission)
-          
+
+          // If student has submitted, show the submission tab by default
           if (mySubmission) {
             setActiveTab("submission")
           }
         } catch (err) {
-          console.log("No submissions found")
+          console.log("No submissions found or endpoint not available")
         }
       } else if (user.role === "admin") {
+        // Fetch all submissions for this assignment
         try {
           const submissionsRes = await axios.get(`${API_URL}/assignments/${id}/submissions`, { headers })
           setSubmissions(submissionsRes.data)
@@ -79,14 +83,14 @@ const AssignmentDetail = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       )
 
       toast.success("Assignment submitted successfully!")
       setShowSubmitModal(false)
       setSubmissionContent("")
-      setActiveTab("submission")
-      fetchAssignmentData()
+      setActiveTab("submission") // Switch to submission tab after submitting
+      fetchAssignmentData() // Refresh to show the submission
     } catch (error) {
       toast.error(error.response?.data?.error?.message || "Failed to submit assignment")
       console.error("Submit error:", error)
@@ -119,6 +123,7 @@ const AssignmentDetail = () => {
   }
 
   if (loading) return <div className="d-flex justify-content-center p-5">Loading assignment...</div>
+
   if (!assignment) return <div className="alert alert-danger">Assignment not found</div>
 
   return (
@@ -130,9 +135,7 @@ const AssignmentDetail = () => {
             <Badge bg={assignment.published ? "success" : "warning"}>
               {assignment.published ? "Published" : "Draft"}
             </Badge>
-            <Badge bg={isOverdue(assignment.dueDate) ? "danger" : "info"}>
-              {getTimeRemaining(assignment.dueDate)}
-            </Badge>
+            <Badge bg={isOverdue(assignment.dueDate) ? "danger" : "info"}>{getTimeRemaining(assignment.dueDate)}</Badge>
             <Badge bg="secondary">{assignment.totalMarks} points</Badge>
           </div>
         </div>
@@ -155,15 +158,13 @@ const AssignmentDetail = () => {
               <Tab eventKey="assignment" title="📚 Assignment">
                 <Card>
                   <Card.Header>
-                    <h5 className="mb-0">📋 Assignment Instructions</h5>
+                    <h5 className="mb-0">Assignment Instructions</h5>
                   </Card.Header>
                   <Card.Body>
                     <div className="mb-4">
                       <h6>📋 Description:</h6>
                       <div className="bg-light p-3 rounded">
-                        <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>
-                          {assignment.description}
-                        </pre>
+                        <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>{assignment.description}</pre>
                       </div>
                     </div>
 
@@ -198,7 +199,8 @@ const AssignmentDetail = () => {
                         </div>
                       </Col>
                     </Row>
-                    
+
+                    {/* Submission Status */}
                     <Alert variant={submission ? "success" : isOverdue(assignment.dueDate) ? "danger" : "info"}>
                       {submission ? (
                         <div>
@@ -211,10 +213,10 @@ const AssignmentDetail = () => {
                         </div>
                       ) : assignment.published ? (
                         <div>
-                          <strong>{isOverdue(assignment.dueDate) ? "⚠️ Overdue:" : "📝 Ready to Submit:"}</strong>
-                          {isOverdue(assignment.dueDate) 
-                            ? " This assignment is past due, but you can still submit." 
-                            : " Read the instructions and submit your work."}
+                          <strong>{isOverdue(assignment.dueDate) ? "⚠️ Overdue:" : "📝 Ready to Submit:"}</strong>{" "}
+                          {isOverdue(assignment.dueDate)
+                            ? "This assignment is past due, but you can still submit (marked as late)."
+                            : "Read the instructions above and submit your work below."}
                           <div className="mt-2">
                             <Button
                               variant={isOverdue(assignment.dueDate) ? "warning" : "primary"}
@@ -226,7 +228,7 @@ const AssignmentDetail = () => {
                         </div>
                       ) : (
                         <div>
-                          <strong>⏳ Not Available:</strong> This assignment is not yet published.
+                          <strong>⏳ Not Available:</strong> This assignment is not yet published for submission.
                         </div>
                       )}
                     </Alert>
@@ -308,7 +310,8 @@ const AssignmentDetail = () => {
 
                       {submission.status !== "graded" && (
                         <Alert variant="info">
-                          <strong>⏳ Waiting for Grade:</strong> Your instructor will review and grade your submission soon.
+                          <strong>⏳ Waiting for Grade:</strong> Your instructor will review and grade your submission
+                          soon.
                         </Alert>
                       )}
                     </Card.Body>
@@ -317,28 +320,57 @@ const AssignmentDetail = () => {
               </Tab>
             </Tabs>
           ) : (
-            <Card>
+            // Admin view - single card
+            <Card className="mb-4">
               <Card.Header>
-                <h5>Assignment Details</h5>
+                <div className="d-flex justify-content-between align-items-center">
+                  <h5 className="mb-0">Assignment Details</h5>
+                  <div className="d-flex gap-2">
+                    <Badge bg={assignment.published ? "success" : "warning"}>
+                      {assignment.published ? "Published" : "Draft"}
+                    </Badge>
+                    <Badge bg={isOverdue(assignment.dueDate) ? "danger" : "info"}>
+                      {isOverdue(assignment.dueDate) ? "Overdue" : "Active"}
+                    </Badge>
+                  </div>
+                </div>
               </Card.Header>
               <Card.Body>
-                <div className="bg-light p-3 rounded mb-3">
-                  <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>
-                    {assignment.description}
-                  </pre>
+                <div className="mb-3">
+                  <strong>Description:</strong>
+                  <div className="bg-light p-3 rounded mt-2">
+                    <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>{assignment.description}</pre>
+                  </div>
                 </div>
-                <p><strong>Due Date:</strong> {formatDate(assignment.dueDate)}</p>
-                <p><strong>Total Points:</strong> {assignment.totalMarks}</p>
-                <p><strong>Created By:</strong> {assignment.createdBy?.fullName}</p>
+
+                <Row>
+                  <Col md={6}>
+                    <p>
+                      <strong>Due Date:</strong> {formatDate(assignment.dueDate)}
+                    </p>
+                    <p>
+                      <strong>Total Marks:</strong> {assignment.totalMarks}
+                    </p>
+                  </Col>
+                  <Col md={6}>
+                    <p>
+                      <strong>Created By:</strong> {assignment.createdBy?.fullName}
+                    </p>
+                    <p>
+                      <strong>Created:</strong> {formatDate(assignment.createdAt)}
+                    </p>
+                  </Col>
+                </Row>
               </Card.Body>
             </Card>
           )}
         </Col>
 
         <Col md={4}>
+          {/* Assignment Info Sidebar */}
           <Card className="mb-4">
             <Card.Header>
-              <h6>📊 Assignment Info</h6>
+              <h6 className="mb-0">📊 Assignment Info</h6>
             </Card.Header>
             <Card.Body>
               <div className="mb-3">
@@ -366,9 +398,7 @@ const AssignmentDetail = () => {
                 <div className="mb-3">
                   <small className="text-muted">Your Status</small>
                   <div>
-                    <Badge bg={submission.status === "graded" ? "success" : "info"}>
-                      {submission.status}
-                    </Badge>
+                    <Badge bg={submission.status === "graded" ? "success" : "info"}>{submission.status}</Badge>
                     {submission.status === "graded" && (
                       <div className="mt-1">
                         <span className="text-primary fw-bold">
@@ -382,10 +412,11 @@ const AssignmentDetail = () => {
             </Card.Body>
           </Card>
 
+          {/* Admin: Submissions Overview */}
           {user.role === "admin" && (
             <Card>
               <Card.Header>
-                <h6>📝 Submissions ({submissions.length})</h6>
+                <h6 className="mb-0">📝 Submissions ({submissions.length})</h6>
               </Card.Header>
               <Card.Body>
                 {submissions.length > 0 ? (
@@ -394,9 +425,7 @@ const AssignmentDetail = () => {
                       <div key={sub._id} className="border-bottom pb-2 mb-2">
                         <div className="d-flex justify-content-between">
                           <strong>{sub.student.fullName}</strong>
-                          <Badge bg={sub.status === "graded" ? "success" : "warning"}>
-                            {sub.status}
-                          </Badge>
+                          <Badge bg={sub.status === "graded" ? "success" : "warning"}>{sub.status}</Badge>
                         </div>
                         <small className="text-muted">
                           {formatDate(sub.submittedAt)}
@@ -423,6 +452,7 @@ const AssignmentDetail = () => {
         </Col>
       </Row>
 
+      {/* Submit Assignment Modal */}
       <Modal show={showSubmitModal} onHide={() => setShowSubmitModal(false)} size="lg">
         <Modal.Header closeButton>
           <Modal.Title>📝 Submit Assignment: {assignment.title}</Modal.Title>
@@ -431,7 +461,8 @@ const AssignmentDetail = () => {
           <Alert variant={isOverdue(assignment.dueDate) ? "warning" : "info"}>
             {isOverdue(assignment.dueDate) ? (
               <>
-                <strong>⚠️ Late Submission:</strong> This assignment is past the due date. Your submission will be marked as late.
+                <strong>⚠️ Late Submission:</strong> This assignment is past the due date. Your submission will be marked
+                as late.
               </>
             ) : (
               <>
