@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { toast } from "react-toastify"
 import axios from "axios"
-import { Card, Button, Badge, Form, Alert, Modal, Tabs, Tab } from "react-bootstrap"
+import { Card, Button, Badge, Form, Alert, Modal, Row, Col, Tabs, Tab } from "react-bootstrap"
 import { useAuth } from "../contexts/AuthContext"
 
 const AssignmentDetail = () => {
@@ -140,12 +140,105 @@ const AssignmentDetail = () => {
         </div>
       </div>
 
-      {user.role === "student" ? (
-        <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k)} className="mb-3">
-          <Tab eventKey="assignment" title="📚 Assignment">
+      <Row>
+        <Col md={8}>
+          {/* Main content area - tabs or admin view */}
+          {user.role === "student" ? (
+            <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k)} className="mb-3">
+              <Tab eventKey="assignment" title="📚 Assignment">
+                <Card>
+                  <Card.Header>
+                    <h5>Assignment Instructions</h5>
+                  </Card.Header>
+                  <Card.Body>
+                    <div className="bg-light p-3 rounded mb-3">
+                      <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>
+                        {assignment.description}
+                      </pre>
+                    </div>
+                    <p><strong>Due Date:</strong> 
+                      <span className={isOverdue(assignment.dueDate) ? "text-danger" : "text-success"}>
+                        {formatDate(assignment.dueDate)}
+                      </span>
+                    </p>
+                    <p><strong>Total Points:</strong> {assignment.totalMarks}</p>
+                    <p><strong>Created By:</strong> {assignment.createdBy?.fullName}</p>
+                    
+                    <Alert variant={submission ? "success" : isOverdue(assignment.dueDate) ? "danger" : "info"}>
+                      {submission ? (
+                        <div>
+                          <strong>✅ Submitted!</strong> You have already submitted this assignment.
+                          <div className="mt-2">
+                            <Button variant="outline-success" size="sm" onClick={() => setActiveTab("submission")}>
+                              View Your Submission
+                            </Button>
+                          </div>
+                        </div>
+                      ) : assignment.published ? (
+                        <div>
+                          <strong>{isOverdue(assignment.dueDate) ? "⚠️ Overdue:" : "📝 Ready to Submit:"}</strong>
+                          {isOverdue(assignment.dueDate) 
+                            ? " This assignment is past due, but you can still submit." 
+                            : " Read the instructions and submit your work."}
+                          <div className="mt-2">
+                            <Button
+                              variant={isOverdue(assignment.dueDate) ? "warning" : "primary"}
+                              onClick={() => setShowSubmitModal(true)}
+                            >
+                              {isOverdue(assignment.dueDate) ? "Submit Late" : "Submit Assignment"}
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <strong>⏳ Not Available:</strong> This assignment is not yet published.
+                        </div>
+                      )}
+                    </Alert>
+                  </Card.Body>
+                </Card>
+              </Tab>
+
+              <Tab eventKey="submission" title={`📝 My Submission ${submission ? "✅" : ""}`} disabled={!submission}>
+                {submission && (
+                  <Card>
+                    <Card.Header>
+                      <div className="d-flex justify-content-between align-items-center">
+                        <h5>Your Submission</h5>
+                        <Badge bg={submission.status === "graded" ? "success" : "info"}>
+                          {submission.status}
+                        </Badge>
+                      </div>
+                    </Card.Header>
+                    <Card.Body>
+                      <p><strong>Submitted:</strong> {formatDate(submission.submittedAt)}</p>
+                      <div className="bg-light p-3 rounded">
+                        <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>
+                          {submission.content}
+                        </pre>
+                      </div>
+                      {submission.status === "graded" && (
+                        <div className="mt-3">
+                          <p><strong>Grade:</strong> {submission.marks}/{assignment.totalMarks}</p>
+                          {submission.feedback && (
+                            <div>
+                              <strong>Feedback:</strong>
+                              <div className="bg-info bg-opacity-10 p-3 rounded mt-2">
+                                {submission.feedback}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </Card.Body>
+                  </Card>
+                )}
+              </Tab>
+            </Tabs>
+          ) : (
             <Card>
               <Card.Header>
-                <h5>Assignment Instructions</h5>
+                <h5>Assignment Details</h5>
               </Card.Header>
               <Card.Body>
                 <div className="bg-light p-3 rounded mb-3">
@@ -153,102 +246,63 @@ const AssignmentDetail = () => {
                     {assignment.description}
                   </pre>
                 </div>
-                <p><strong>Due Date:</strong> 
-                  <span className={isOverdue(assignment.dueDate) ? "text-danger" : "text-success"}>
-                    {formatDate(assignment.dueDate)}
-                  </span>
-                </p>
+                <p><strong>Due Date:</strong> {formatDate(assignment.dueDate)}</p>
                 <p><strong>Total Points:</strong> {assignment.totalMarks}</p>
                 <p><strong>Created By:</strong> {assignment.createdBy?.fullName}</p>
-                
-                <Alert variant={submission ? "success" : isOverdue(assignment.dueDate) ? "danger" : "info"}>
-                  {submission ? (
-                    <div>
-                      <strong>✅ Submitted!</strong> You have already submitted this assignment.
-                      <div className="mt-2">
-                        <Button variant="outline-success" size="sm" onClick={() => setActiveTab("submission")}>
-                          View Your Submission
-                        </Button>
-                      </div>
-                    </div>
-                  ) : assignment.published ? (
-                    <div>
-                      <strong>{isOverdue(assignment.dueDate) ? "⚠️ Overdue:" : "📝 Ready to Submit:"}</strong>
-                      {isOverdue(assignment.dueDate) 
-                        ? " This assignment is past due, but you can still submit." 
-                        : " Read the instructions and submit your work."}
-                      <div className="mt-2">
-                        <Button
-                          variant={isOverdue(assignment.dueDate) ? "warning" : "primary"}
-                          onClick={() => setShowSubmitModal(true)}
-                        >
-                          {isOverdue(assignment.dueDate) ? "Submit Late" : "Submit Assignment"}
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div>
-                      <strong>⏳ Not Available:</strong> This assignment is not yet published.
-                    </div>
-                  )}
-                </Alert>
               </Card.Body>
             </Card>
-          </Tab>
+          )}
+        </Col>
 
-          <Tab eventKey="submission" title={`📝 My Submission ${submission ? "✅" : ""}`} disabled={!submission}>
-            {submission && (
-              <Card>
-                <Card.Header>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <h5>Your Submission</h5>
+        <Col md={4}>
+          {/* Sidebar with assignment info */}
+          <Card className="mb-4">
+            <Card.Header>
+              <h6>📊 Assignment Info</h6>
+            </Card.Header>
+            <Card.Body>
+              <div className="mb-3">
+                <small className="text-muted">Due Date</small>
+                <div className={isOverdue(assignment.dueDate) ? "text-danger" : "text-success"}>
+                  {formatDate(assignment.dueDate)}
+                </div>
+                <small className={isOverdue(assignment.dueDate) ? "text-danger" : "text-info"}>
+                  {getTimeRemaining(assignment.dueDate)}
+                </small>
+              </div>
+              <div className="mb-3">
+                <small className="text-muted">Total Points</small>
+                <div className="fs-5 text-primary">{assignment.totalMarks}</div>
+              </div>
+              <div className="mb-3">
+                <small className="text-muted">Status</small>
+                <div>
+                  <Badge bg={assignment.published ? "success" : "warning"}>
+                    {assignment.published ? "Published" : "Draft"}
+                  </Badge>
+                </div>
+              </div>
+              {user.role === "student" && submission && (
+                <div className="mb-3">
+                  <small className="text-muted">Your Status</small>
+                  <div>
                     <Badge bg={submission.status === "graded" ? "success" : "info"}>
                       {submission.status}
                     </Badge>
+                    {submission.status === "graded" && (
+                      <div className="mt-1">
+                        <span className="text-primary fw-bold">
+                          {submission.marks}/{assignment.totalMarks}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                </Card.Header>
-                <Card.Body>
-                  <p><strong>Submitted:</strong> {formatDate(submission.submittedAt)}</p>
-                  <div className="bg-light p-3 rounded">
-                    <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>
-                      {submission.content}
-                    </pre>
-                  </div>
-                  {submission.status === "graded" && (
-                    <div className="mt-3">
-                      <p><strong>Grade:</strong> {submission.marks}/{assignment.totalMarks}</p>
-                      {submission.feedback && (
-                        <div>
-                          <strong>Feedback:</strong>
-                          <div className="bg-info bg-opacity-10 p-3 rounded mt-2">
-                            {submission.feedback}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </Card.Body>
-              </Card>
-            )}
-          </Tab>
-        </Tabs>
-      ) : (
-        <Card>
-          <Card.Header>
-            <h5>Assignment Details</h5>
-          </Card.Header>
-          <Card.Body>
-            <div className="bg-light p-3 rounded mb-3">
-              <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>
-                {assignment.description}
-              </pre>
-            </div>
-            <p><strong>Due Date:</strong> {formatDate(assignment.dueDate)}</p>
-            <p><strong>Total Points:</strong> {assignment.totalMarks}</p>
-            <p><strong>Created By:</strong> {assignment.createdBy?.fullName}</p>
-          </Card.Body>
-        </Card>
-      )}
+                </div>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
 
       <Modal show={showSubmitModal} onHide={() => setShowSubmitModal(false)} size="lg">
         <Modal.Header closeButton>
