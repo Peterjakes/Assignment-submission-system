@@ -1,13 +1,12 @@
+const dotenv = require("dotenv")
+dotenv.config()
 const express = require("express")
 const cors = require("cors")
-const dotenv = require("dotenv")
 const createError = require("http-errors")
 require("./helpers/init_mongodb")
 const authRoutes = require("./routes/authRoute")
 const userRoutes = require("./routes/users")
 const assignmentRoutes = require("./routes/assignments")
-
-dotenv.config()
 
 // Initialize express app
 const app = express()
