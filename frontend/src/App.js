@@ -15,6 +15,7 @@ import UpdateStudentPage from "./components/UpdateStudentPage"
 import AssignmentList from "./components/AssignmentList"
 import CreateAssignment from "./components/CreateAssignment"
 import UserManagement from "./components/UserManagement"
+import AssignmentDetail from "./components/AssignmentDetail"
 import "./App.css"
 
 function App() {
@@ -38,6 +39,9 @@ function App() {
               {/* Assignment Management */}
               <Route path="/assignments" element={<AssignmentList />} />
               <Route path="/create-assignment" element={<CreateAssignment />} />
+
+              {/* Assignment Detail & Submission */}
+              <Route path="/assignments/:id" element={<AssignmentDetail />} />
 
               {/* Student Management (Admin only) */}
               <Route path="/students" element={<StudentList />} />
