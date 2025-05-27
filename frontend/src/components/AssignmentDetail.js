@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
 import axios from "axios"
-import { Card, Button } from "react-bootstrap"
+import { Card, Button, Badge } from "react-bootstrap"
 import { useAuth } from "../contexts/AuthContext"
 
 const AssignmentDetail = () => {
@@ -33,13 +33,43 @@ const AssignmentDetail = () => {
     }
   }
 
+  const isOverdue = (dueDate) => {
+    return new Date() > new Date(dueDate)
+  }
+
+  const getTimeRemaining = (dueDate) => {
+    const now = new Date()
+    const due = new Date(dueDate)
+    const diff = due - now
+
+    if (diff <= 0) return "Overdue"
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+
+    if (days > 0) return `${days} day${days > 1 ? "s" : ""} remaining`
+    if (hours > 0) return `${hours} hour${hours > 1 ? "s" : ""} remaining`
+    return "Due soon"
+  }
+
   if (loading) return <div className="d-flex justify-content-center p-5">Loading assignment...</div>
   if (!assignment) return <div className="alert alert-danger">Assignment not found</div>
 
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>{assignment.title}</h2>
+        <div>
+          <h2>{assignment.title}</h2>
+          <div className="d-flex gap-2 mt-2">
+            <Badge bg={assignment.published ? "success" : "warning"}>
+              {assignment.published ? "Published" : "Draft"}
+            </Badge>
+            <Badge bg={isOverdue(assignment.dueDate) ? "danger" : "info"}>
+              {getTimeRemaining(assignment.dueDate)}
+            </Badge>
+            <Badge bg="secondary">{assignment.totalMarks} points</Badge>
+          </div>
+        </div>
         <Button variant="outline-secondary" onClick={() => navigate("/assignments")}>
           ← Back to Assignments
         </Button>
@@ -55,7 +85,11 @@ const AssignmentDetail = () => {
               {assignment.description}
             </pre>
           </div>
-          <p><strong>Due Date:</strong> {new Date(assignment.dueDate).toLocaleString()}</p>
+          <p><strong>Due Date:</strong> 
+            <span className={isOverdue(assignment.dueDate) ? "text-danger" : "text-success"}>
+              {new Date(assignment.dueDate).toLocaleString()}
+            </span>
+          </p>
           <p><strong>Total Points:</strong> {assignment.totalMarks}</p>
           <p><strong>Created By:</strong> {assignment.createdBy?.fullName}</p>
         </Card.Body>
