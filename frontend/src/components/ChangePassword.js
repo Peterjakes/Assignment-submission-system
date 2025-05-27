@@ -52,6 +52,22 @@ const ChangePassword = () => {
     return Object.keys(newErrors).length === 0
   }
 
+  const getPasswordStrength = (password) => {
+    if (!password) return { strength: 0, text: "", color: "" }
+
+    let strength = 0
+    if (password.length >= 6) strength++
+    if (password.length >= 8) strength++
+    if (/[A-Z]/.test(password)) strength++
+    if (/[a-z]/.test(password)) strength++
+    if (/[0-9]/.test(password)) strength++
+    if (/[^A-Za-z0-9]/.test(password)) strength++
+
+    if (strength <= 2) return { strength, text: "Weak", color: "danger" }
+    if (strength <= 4) return { strength, text: "Medium", color: "warning" }
+    return { strength, text: "Strong", color: "success" }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
 
@@ -79,7 +95,6 @@ const ChangePassword = () => {
 
       toast.success("Password changed successfully!")
       
-      // Reset form
       setFormData({
         currentPassword: "",
         newPassword: "",
@@ -101,6 +116,8 @@ const ChangePassword = () => {
       setLoading(false)
     }
   }
+
+  const passwordStrength = getPasswordStrength(formData.newPassword)
 
   return (
     <div className="d-flex align-items-center justify-content-center">
@@ -137,6 +154,20 @@ const ChangePassword = () => {
                 minLength="6"
               />
               <Form.Control.Feedback type="invalid">{errors.newPassword}</Form.Control.Feedback>
+
+              {formData.newPassword && (
+                <div className="mt-2">
+                  <small className={`text-${passwordStrength.color}`}>
+                    Password strength: <strong>{passwordStrength.text}</strong>
+                  </small>
+                  <div className="progress mt-1" style={{ height: "4px" }}>
+                    <div
+                      className={`progress-bar bg-${passwordStrength.color}`}
+                      style={{ width: `${(passwordStrength.strength / 6) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
             </Form.Group>
 
             <Form.Group className="mb-3">
@@ -151,6 +182,10 @@ const ChangePassword = () => {
                 required
               />
               <Form.Control.Feedback type="invalid">{errors.confirmPassword}</Form.Control.Feedback>
+
+              {formData.confirmPassword && formData.newPassword === formData.confirmPassword && (
+                <small className="text-success">✓ Passwords match</small>
+              )}
             </Form.Group>
 
             <div className="d-flex justify-content-end">
