@@ -1,3 +1,5 @@
+"use client"
+
 import { Outlet, NavLink, useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 import { Navbar, Container, Nav, Button, NavDropdown } from "react-bootstrap"
@@ -53,9 +55,19 @@ const Layout = () => {
                 </Nav.Link>
               )}
             </Nav>
-            <Navbar.Text className="me-3">
-              Welcome, <strong>{user?.fullName}</strong> ({user?.role})
-            </Navbar.Text>
+
+            {/* User Profile Dropdown */}
+            <NavDropdown title={`${user?.fullName} (${user?.role})`} id="user-dropdown" className="me-2">
+              <NavDropdown.Item as={NavLink} to="/profile">
+                👤 View Profile
+              </NavDropdown.Item>
+              <NavDropdown.Item as={NavLink} to="/change-password">
+                🔐 Change Password
+              </NavDropdown.Item>
+              <NavDropdown.Divider />
+              <NavDropdown.Item onClick={handleLogout}>🚪 Logout</NavDropdown.Item>
+            </NavDropdown>
+
             <Button variant="outline-light" size="sm" onClick={handleLogout}>
               Logout
             </Button>

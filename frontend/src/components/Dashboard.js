@@ -1,8 +1,10 @@
+"use client"
+
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 import axios from "axios"
-import { Card, Row, Col, ListGroup, Badge, Button } from "react-bootstrap"
+import { Card, Row, Col, ListGroup, Badge, Button, Alert } from "react-bootstrap"
 
 const Dashboard = () => {
   const { user } = useAuth()
@@ -15,23 +17,43 @@ const Dashboard = () => {
   const [recentAssignments, setRecentAssignments] = useState([])
   const [recentSubmissions, setRecentSubmissions] = useState([])
   const [loading, setLoading] = useState(true)
+  const [showPasswordReminder, setShowPasswordReminder] = useState(false)
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api"
 
   useEffect(() => {
+    // Check if this might be a first login (show password change reminder)
+    const hasChangedPassword = sessionStorage.getItem("hasChangedPassword")
+    if (!hasChangedPassword && user?.role === "student") {
+      setShowPasswordReminder(true)
+    }
+
     const fetchDashboardData = async () => {
       try {
         const token = sessionStorage.getItem("token")
-        const assignmentsRes = await axios.get(`${API_URL}/assignments`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+
+        console.log("📊 Fetching dashboard data...")
+        console.log("🎫 Using token:", token ? "Yes" : "No")
+        console.log("👤 User role:", user?.role)
+
+        // Test token first
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        }
+
+        console.log("🔧 Request headers:", headers)
+
+        const assignmentsRes = await axios.get(`${API_URL}/assignments`, { headers })
+        console.log("✅ Assignments fetched:", assignmentsRes.data.length)
+
         setRecentAssignments(assignmentsRes.data.slice(0, 5))
 
         if (user.role === "admin") {
-          // Admin dashboard data
-          const studentsRes = await axios.get(`${API_URL}/users/students`, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
+          console.log("👨‍💼 Fetching admin data...")
+
+          const studentsRes = await axios.get(`${API_URL}/users/students`, { headers })
+          console.log("✅ Students fetched:", studentsRes.data.length)
 
           const assignments = assignmentsRes.data
           const students = studentsRes.data
@@ -43,13 +65,12 @@ const Dashboard = () => {
           for (const assignment of assignments.slice(0, 3)) {
             try {
               const submissionsRes = await axios.get(`${API_URL}/assignments/${assignment._id}/submissions`, {
-                headers: { Authorization: `Bearer ${token}` },
+                headers,
               })
               submissions = [...submissions, ...submissionsRes.data]
               pendingCount += submissionsRes.data.filter((s) => s.status !== "graded").length
             } catch (err) {
-              // Handle case where submissions endpoint might not exist yet
-              console.log("Submissions endpoint not available yet")
+              console.log("⚠️ Submissions endpoint not available yet for assignment:", assignment._id)
             }
           }
 
@@ -62,11 +83,11 @@ const Dashboard = () => {
 
           setRecentSubmissions(submissions.slice(0, 5))
         } else {
+          console.log("🎓 Fetching student data...")
+
           // Student dashboard data
           try {
-            const mySubmissionsRes = await axios.get(`${API_URL}/assignments/my-submissions`, {
-              headers: { Authorization: `Bearer ${token}` },
-            })
+            const mySubmissionsRes = await axios.get(`${API_URL}/assignments/my-submissions`, { headers })
             const submissions = mySubmissionsRes.data
 
             setStats({
@@ -77,7 +98,7 @@ const Dashboard = () => {
 
             setRecentSubmissions(submissions.slice(0, 5))
           } catch (err) {
-            // Handle case where my-submissions endpoint might not exist yet
+            console.log("⚠️ My submissions endpoint not available yet")
             setStats({
               assignments: assignmentsRes.data.filter((a) => a.published).length,
               submissions: 0,
@@ -87,14 +108,23 @@ const Dashboard = () => {
         }
 
         setLoading(false)
+        console.log("✅ Dashboard data loaded successfully")
       } catch (error) {
-        console.error("Error fetching dashboard data:", error)
+        console.error("❌ Error fetching dashboard data:", error)
+        console.error("❌ Error response:", error.response?.data)
         setLoading(false)
       }
     }
 
-    fetchDashboardData()
+    if (user) {
+      fetchDashboardData()
+    }
   }, [user, API_URL])
+
+  const dismissPasswordReminder = () => {
+    setShowPasswordReminder(false)
+    sessionStorage.setItem("hasChangedPassword", "reminded")
+  }
 
   if (loading) return <div className="d-flex justify-content-center p-5">Loading dashboard...</div>
 
@@ -113,6 +143,24 @@ const Dashboard = () => {
           </div>
         )}
       </div>
+
+      {/* Password Change Reminder for Students */}
+      {showPasswordReminder && user.role === "student" && (
+        <Alert variant="warning" dismissible onClose={dismissPasswordReminder} className="mb-4">
+          <Alert.Heading>🔐 Security Reminder</Alert.Heading>
+          <p>
+            Welcome! For your security, we recommend changing your password from the one provided by your administrator.
+          </p>
+          <div className="d-flex gap-2">
+            <Link to="/change-password" className="btn btn-warning btn-sm">
+              Change Password Now
+            </Link>
+            <Button variant="outline-warning" size="sm" onClick={dismissPasswordReminder}>
+              Remind Me Later
+            </Button>
+          </div>
+        </Alert>
+      )}
 
       {/* Stats Cards */}
       <Row className="mb-4">
