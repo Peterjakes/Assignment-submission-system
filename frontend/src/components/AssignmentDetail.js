@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { useParams, useNavigate } from "react-router-dom"
+import { useParams, useNavigate, Link } from "react-router-dom"
 import { toast } from "react-toastify"
 import axios from "axios"
 import { Card, Button, Badge, Form, Alert, Modal, Tabs, Tab } from "react-bootstrap"
@@ -128,9 +128,16 @@ const AssignmentDetail = () => {
             <Badge bg="secondary">{assignment.totalMarks} points</Badge>
           </div>
         </div>
-        <Button variant="outline-secondary" onClick={() => navigate("/assignments")}>
-          ← Back to Assignments
-        </Button>
+        <div className="d-flex gap-2">
+          <Button variant="outline-secondary" onClick={() => navigate("/assignments")}>
+            ← Back to Assignments
+          </Button>
+          {user.role === "admin" && (
+            <Link to={`/update-assignment/${assignment._id}`}>
+              <Button variant="primary">Edit Assignment</Button>
+            </Link>
+          )}
+        </div>
       </div>
 
       {user.role === "student" ? (
