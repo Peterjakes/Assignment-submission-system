@@ -2,9 +2,11 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
 import axios from "axios"
-import { Card, Form, Button } from "react-bootstrap"
+import { Card, Form, Button, Alert } from "react-bootstrap"
+import { useAuth } from "../contexts/AuthContext"
 
 const ChangePassword = () => {
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -124,8 +126,15 @@ const ChangePassword = () => {
       <Card className="w-100" style={{ maxWidth: "500px" }}>
         <Card.Header>
           <Card.Title>Change Password</Card.Title>
+          <small className="text-muted">Update your account password</small>
         </Card.Header>
         <Card.Body>
+          <Alert variant="info">
+            <strong>👤 Account:</strong> {user?.fullName} ({user?.username})
+            <br />
+            <strong>🔐 Security:</strong> Choose a strong password that you haven't used before
+          </Alert>
+
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
               <Form.Label>Current Password *</Form.Label>
