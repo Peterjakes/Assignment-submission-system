@@ -1,5 +1,5 @@
 import { useAuth } from "../contexts/AuthContext"
-import { Card, Row, Col, ListGroup } from "react-bootstrap"
+import { Card, Row, Col, Badge, ListGroup } from "react-bootstrap"
 
 const Profile = () => {
   const { user } = useAuth()
@@ -31,8 +31,14 @@ const Profile = () => {
                     </ListGroup.Item>
                     <ListGroup.Item className="d-flex justify-content-between">
                       <strong>Role:</strong>
-                      <span>{user?.role}</span>
+                      <Badge bg={user?.role === "admin" ? "danger" : "primary"}>{user?.role}</Badge>
                     </ListGroup.Item>
+                    {user?.studentId && (
+                      <ListGroup.Item className="d-flex justify-content-between">
+                        <strong>Student ID:</strong>
+                        <span>{user?.studentId}</span>
+                      </ListGroup.Item>
+                    )}
                   </ListGroup>
                 </Card.Body>
               </Card>
