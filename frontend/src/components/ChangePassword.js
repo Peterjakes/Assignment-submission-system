@@ -22,6 +22,7 @@ const ChangePassword = () => {
     const { name, value } = e.target
     setFormData({ ...formData, [name]: value })
 
+    // Clear specific error when user starts typing
     if (errors[name]) {
       setErrors({ ...errors, [name]: "" })
     }
@@ -96,13 +97,15 @@ const ChangePassword = () => {
       )
 
       toast.success("Password changed successfully!")
-      
+
+      // Reset form
       setFormData({
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
       })
 
+      // Redirect to dashboard after successful change
       setTimeout(() => {
         navigate("/dashboard")
       }, 2000)
@@ -110,6 +113,7 @@ const ChangePassword = () => {
       const errorMessage = error.response?.data?.error?.message || "Failed to change password"
       toast.error(errorMessage)
 
+      // If current password is wrong, clear it
       if (error.response?.status === 400) {
         setFormData({ ...formData, currentPassword: "" })
         setErrors({ currentPassword: "Current password is incorrect" })
@@ -125,14 +129,24 @@ const ChangePassword = () => {
     <div className="d-flex align-items-center justify-content-center">
       <Card className="w-100" style={{ maxWidth: "500px" }}>
         <Card.Header>
-          <Card.Title>Change Password</Card.Title>
-          <small className="text-muted">Update your account password</small>
+          <Card.Title>🔐 Change Password</Card.Title>
+          <small className="text-muted">Update your account password securely</small>
         </Card.Header>
         <Card.Body>
-          <Alert variant="info">
+          <Alert variant="info" className="mb-3">
             <strong>👤 Account:</strong> {user?.fullName} ({user?.username})
             <br />
             <strong>🔐 Security:</strong> Choose a strong password that you haven't used before
+          </Alert>
+
+          <Alert variant="warning" className="mb-3">
+            <strong>💡 Password Tips:</strong>
+            <ul className="mb-0 mt-1">
+              <li>Use at least 8 characters</li>
+              <li>Include uppercase and lowercase letters</li>
+              <li>Add numbers and special symbols</li>
+              <li>Avoid personal information or common words</li>
+            </ul>
           </Alert>
 
           <Form onSubmit={handleSubmit}>
@@ -167,9 +181,9 @@ const ChangePassword = () => {
               {formData.newPassword && (
                 <div className="mt-2">
                   <small className={`text-${passwordStrength.color}`}>
-                    Password strength: <strong>{passwordStrength.text}</strong>
+                    🔍 Password strength: <strong>{passwordStrength.text}</strong>
                   </small>
-                  <div className="progress mt-1" style={{ height: "4px" }}>
+                  <div className="progress mt-1" style={{ height: "6px" }}>
                     <div
                       className={`progress-bar bg-${passwordStrength.color}`}
                       style={{ width: `${(passwordStrength.strength / 6) * 100}%` }}
@@ -179,7 +193,7 @@ const ChangePassword = () => {
               )}
             </Form.Group>
 
-            <Form.Group className="mb-3">
+            <Form.Group className="mb-4">
               <Form.Label>Confirm New Password *</Form.Label>
               <Form.Control
                 type="password"
@@ -193,16 +207,24 @@ const ChangePassword = () => {
               <Form.Control.Feedback type="invalid">{errors.confirmPassword}</Form.Control.Feedback>
 
               {formData.confirmPassword && formData.newPassword === formData.confirmPassword && (
-                <small className="text-success">✓ Passwords match</small>
+                <small className="text-success">✅ Passwords match</small>
               )}
             </Form.Group>
 
-            <div className="d-flex justify-content-end">
-              <Button variant="secondary" className="me-2" onClick={() => navigate("/dashboard")}>
+            <div className="d-flex justify-content-end gap-2">
+              <Button 
+                variant="outline-secondary" 
+                onClick={() => navigate("/dashboard")}
+                disabled={loading}
+              >
                 Cancel
               </Button>
-              <Button variant="primary" type="submit" disabled={loading}>
-                {loading ? "Changing Password..." : "Change Password"}
+              <Button 
+                variant="primary" 
+                type="submit" 
+                disabled={loading}
+              >
+                {loading ? "🔄 Changing Password..." : "🔐 Change Password"}
               </Button>
             </div>
           </Form>
