@@ -11,6 +11,7 @@ const AssignmentDetail = () => {
   const { user } = useAuth()
   const [assignment, setAssignment] = useState(null)
   const [submission, setSubmission] = useState(null)
+  const [submissions, setSubmissions] = useState([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [showSubmitModal, setShowSubmitModal] = useState(false)
@@ -28,10 +29,12 @@ const AssignmentDetail = () => {
       const token = sessionStorage.getItem("token")
       const headers = { Authorization: `Bearer ${token}` }
 
+      // Fetch assignment details
       const assignmentRes = await axios.get(`${API_URL}/assignments/${id}`, { headers })
       setAssignment(assignmentRes.data)
 
       if (user.role === "student") {
+        // Check if student has already submitted
         try {
           const submissionsRes = await axios.get(`${API_URL}/assignments/${id}/submissions`, { headers })
           const mySubmission = submissionsRes.data.find((sub) => sub.student._id === user.id)
@@ -42,6 +45,14 @@ const AssignmentDetail = () => {
           }
         } catch (err) {
           console.log("No submissions found")
+        }
+      } else if (user.role === "admin") {
+        // Fetch all submissions for this assignment
+        try {
+          const submissionsRes = await axios.get(`${API_URL}/assignments/${id}/submissions`, { headers })
+          setSubmissions(submissionsRes.data)
+        } catch (err) {
+          console.log("Submissions endpoint not available")
         }
       }
 
@@ -301,6 +312,46 @@ const AssignmentDetail = () => {
               )}
             </Card.Body>
           </Card>
+
+          {/* Submissions overview for admin */}
+          {user.role === "admin" && (
+            <Card>
+              <Card.Header>
+                <h6>📝 Submissions ({submissions.length})</h6>
+              </Card.Header>
+              <Card.Body>
+                {submissions.length > 0 ? (
+                  <div>
+                    {submissions.slice(0, 5).map((sub) => (
+                      <div key={sub._id} className="border-bottom pb-2 mb-2">
+                        <div className="d-flex justify-content-between">
+                          <strong>{sub.student.fullName}</strong>
+                          <Badge bg={sub.status === "graded" ? "success" : "warning"}>
+                            {sub.status}
+                          </Badge>
+                        </div>
+                        <small className="text-muted">
+                          {formatDate(sub.submittedAt)}
+                          {sub.status === "graded" && ` • ${sub.marks}/${assignment.totalMarks}`}
+                        </small>
+                      </div>
+                    ))}
+                    {submissions.length > 5 && (
+                      <small className="text-muted">...and {submissions.length - 5} more</small>
+                    )}
+                    <Link
+                      to={`/assignments/${assignment._id}/submissions`}
+                      className="btn btn-outline-primary btn-sm w-100 mt-2"
+                    >
+                      View All Submissions
+                    </Link>
+                  </div>
+                ) : (
+                  <p className="text-muted mb-0">No submissions yet</p>
+                )}
+              </Card.Body>
+            </Card>
+          )}
         </Col>
       </Row>
 
