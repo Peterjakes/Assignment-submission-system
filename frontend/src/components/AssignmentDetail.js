@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react"
-import { useParams, useNavigate, Link } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
 import axios from "axios"
-import { Card, Button, Badge, Form, Alert, Modal, Row, Col, Tabs, Tab } from "react-bootstrap"
+import { Card, Button, Badge, Form, Alert, Modal, Tabs, Tab } from "react-bootstrap"
 import { useAuth } from "../contexts/AuthContext"
 
 const AssignmentDetail = () => {
@@ -11,7 +11,6 @@ const AssignmentDetail = () => {
   const { user } = useAuth()
   const [assignment, setAssignment] = useState(null)
   const [submission, setSubmission] = useState(null)
-  const [submissions, setSubmissions] = useState([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [showSubmitModal, setShowSubmitModal] = useState(false)
@@ -29,12 +28,10 @@ const AssignmentDetail = () => {
       const token = sessionStorage.getItem("token")
       const headers = { Authorization: `Bearer ${token}` }
 
-      // Fetch assignment details
       const assignmentRes = await axios.get(`${API_URL}/assignments/${id}`, { headers })
       setAssignment(assignmentRes.data)
 
       if (user.role === "student") {
-        // Check if student has already submitted
         try {
           const submissionsRes = await axios.get(`${API_URL}/assignments/${id}/submissions`, { headers })
           const mySubmission = submissionsRes.data.find((sub) => sub.student._id === user.id)
@@ -45,14 +42,6 @@ const AssignmentDetail = () => {
           }
         } catch (err) {
           console.log("No submissions found")
-        }
-      } else if (user.role === "admin") {
-        // Fetch all submissions for this assignment
-        try {
-          const submissionsRes = await axios.get(`${API_URL}/assignments/${id}/submissions`, { headers })
-          setSubmissions(submissionsRes.data)
-        } catch (err) {
-          console.log("Submissions endpoint not available")
         }
       }
 
@@ -139,117 +128,17 @@ const AssignmentDetail = () => {
             <Badge bg="secondary">{assignment.totalMarks} points</Badge>
           </div>
         </div>
-        <div className="d-flex gap-2">
-          <Button variant="outline-secondary" onClick={() => navigate("/assignments")}>
-            ← Back to Assignments
-          </Button>
-          {user.role === "admin" && (
-            <Link to={`/update-assignment/${assignment._id}`}>
-              <Button variant="primary">Edit Assignment</Button>
-            </Link>
-          )}
-        </div>
+        <Button variant="outline-secondary" onClick={() => navigate("/assignments")}>
+          ← Back to Assignments
+        </Button>
       </div>
 
-      <Row>
-        <Col md={8}>
-          {/* Main content area - tabs or admin view */}
-          {user.role === "student" ? (
-            <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k)} className="mb-3">
-              <Tab eventKey="assignment" title="📚 Assignment">
-                <Card>
-                  <Card.Header>
-                    <h5>Assignment Instructions</h5>
-                  </Card.Header>
-                  <Card.Body>
-                    <div className="bg-light p-3 rounded mb-3">
-                      <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>
-                        {assignment.description}
-                      </pre>
-                    </div>
-                    <p><strong>Due Date:</strong> 
-                      <span className={isOverdue(assignment.dueDate) ? "text-danger" : "text-success"}>
-                        {formatDate(assignment.dueDate)}
-                      </span>
-                    </p>
-                    <p><strong>Total Points:</strong> {assignment.totalMarks}</p>
-                    <p><strong>Created By:</strong> {assignment.createdBy?.fullName}</p>
-                    
-                    <Alert variant={submission ? "success" : isOverdue(assignment.dueDate) ? "danger" : "info"}>
-                      {submission ? (
-                        <div>
-                          <strong>✅ Submitted!</strong> You have already submitted this assignment.
-                          <div className="mt-2">
-                            <Button variant="outline-success" size="sm" onClick={() => setActiveTab("submission")}>
-                              View Your Submission
-                            </Button>
-                          </div>
-                        </div>
-                      ) : assignment.published ? (
-                        <div>
-                          <strong>{isOverdue(assignment.dueDate) ? "⚠️ Overdue:" : "📝 Ready to Submit:"}</strong>
-                          {isOverdue(assignment.dueDate) 
-                            ? " This assignment is past due, but you can still submit." 
-                            : " Read the instructions and submit your work."}
-                          <div className="mt-2">
-                            <Button
-                              variant={isOverdue(assignment.dueDate) ? "warning" : "primary"}
-                              onClick={() => setShowSubmitModal(true)}
-                            >
-                              {isOverdue(assignment.dueDate) ? "Submit Late" : "Submit Assignment"}
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div>
-                          <strong>⏳ Not Available:</strong> This assignment is not yet published.
-                        </div>
-                      )}
-                    </Alert>
-                  </Card.Body>
-                </Card>
-              </Tab>
-
-              <Tab eventKey="submission" title={`📝 My Submission ${submission ? "✅" : ""}`} disabled={!submission}>
-                {submission && (
-                  <Card>
-                    <Card.Header>
-                      <div className="d-flex justify-content-between align-items-center">
-                        <h5>Your Submission</h5>
-                        <Badge bg={submission.status === "graded" ? "success" : "info"}>
-                          {submission.status}
-                        </Badge>
-                      </div>
-                    </Card.Header>
-                    <Card.Body>
-                      <p><strong>Submitted:</strong> {formatDate(submission.submittedAt)}</p>
-                      <div className="bg-light p-3 rounded">
-                        <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>
-                          {submission.content}
-                        </pre>
-                      </div>
-                      {submission.status === "graded" && (
-                        <div className="mt-3">
-                          <p><strong>Grade:</strong> {submission.marks}/{assignment.totalMarks}</p>
-                          {submission.feedback && (
-                            <div>
-                              <strong>Feedback:</strong>
-                              <div className="bg-info bg-opacity-10 p-3 rounded mt-2">
-                                {submission.feedback}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </Card.Body>
-                  </Card>
-                )}
-              </Tab>
-            </Tabs>
-          ) : (
+      {user.role === "student" ? (
+        <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k)} className="mb-3">
+          <Tab eventKey="assignment" title="📚 Assignment">
             <Card>
               <Card.Header>
-                <h5>Assignment Details</h5>
+                <h5>Assignment Instructions</h5>
               </Card.Header>
               <Card.Body>
                 <div className="bg-light p-3 rounded mb-3">
@@ -257,119 +146,162 @@ const AssignmentDetail = () => {
                     {assignment.description}
                   </pre>
                 </div>
-                <p><strong>Due Date:</strong> {formatDate(assignment.dueDate)}</p>
+                <p><strong>Due Date:</strong> 
+                  <span className={isOverdue(assignment.dueDate) ? "text-danger" : "text-success"}>
+                    {formatDate(assignment.dueDate)}
+                  </span>
+                </p>
                 <p><strong>Total Points:</strong> {assignment.totalMarks}</p>
                 <p><strong>Created By:</strong> {assignment.createdBy?.fullName}</p>
+                
+                <Alert variant={submission ? "success" : isOverdue(assignment.dueDate) ? "danger" : "info"}>
+                  {submission ? (
+                    <div>
+                      <strong>✅ Submitted!</strong> You have already submitted this assignment.
+                      <div className="mt-2">
+                        <Button variant="outline-success" size="sm" onClick={() => setActiveTab("submission")}>
+                          View Your Submission
+                        </Button>
+                      </div>
+                    </div>
+                  ) : assignment.published ? (
+                    <div>
+                      <strong>{isOverdue(assignment.dueDate) ? "⚠️ Overdue:" : "📝 Ready to Submit:"}</strong>
+                      {isOverdue(assignment.dueDate) 
+                        ? " This assignment is past due, but you can still submit." 
+                        : " Read the instructions and submit your work."}
+                      <div className="mt-2">
+                        <Button
+                          variant={isOverdue(assignment.dueDate) ? "warning" : "primary"}
+                          onClick={() => setShowSubmitModal(true)}
+                        >
+                          {isOverdue(assignment.dueDate) ? "Submit Late" : "Submit Assignment"}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <strong>⏳ Not Available:</strong> This assignment is not yet published.
+                    </div>
+                  )}
+                </Alert>
               </Card.Body>
             </Card>
-          )}
-        </Col>
+          </Tab>
 
-        <Col md={4}>
-          {/* Sidebar with assignment info */}
-          <Card className="mb-4">
-            <Card.Header>
-              <h6>📊 Assignment Info</h6>
-            </Card.Header>
-            <Card.Body>
-              <div className="mb-3">
-                <small className="text-muted">Due Date</small>
-                <div className={isOverdue(assignment.dueDate) ? "text-danger" : "text-success"}>
-                  {formatDate(assignment.dueDate)}
-                </div>
-                <small className={isOverdue(assignment.dueDate) ? "text-danger" : "text-info"}>
-                  {getTimeRemaining(assignment.dueDate)}
-                </small>
-              </div>
-              <div className="mb-3">
-                <small className="text-muted">Total Points</small>
-                <div className="fs-5 text-primary">{assignment.totalMarks}</div>
-              </div>
-              <div className="mb-3">
-                <small className="text-muted">Status</small>
-                <div>
-                  <Badge bg={assignment.published ? "success" : "warning"}>
-                    {assignment.published ? "Published" : "Draft"}
-                  </Badge>
-                </div>
-              </div>
-              {user.role === "student" && submission && (
-                <div className="mb-3">
-                  <small className="text-muted">Your Status</small>
-                  <div>
+          <Tab eventKey="submission" title={`📝 My Submission ${submission ? "✅" : ""}`} disabled={!submission}>
+            {submission && (
+              <Card>
+                <Card.Header>
+                  <div className="d-flex justify-content-between align-items-center">
+                    <h5>Your Submission</h5>
                     <Badge bg={submission.status === "graded" ? "success" : "info"}>
                       {submission.status}
                     </Badge>
-                    {submission.status === "graded" && (
-                      <div className="mt-1">
-                        <span className="text-primary fw-bold">
-                          {submission.marks}/{assignment.totalMarks}
-                        </span>
-                      </div>
-                    )}
                   </div>
-                </div>
-              )}
-            </Card.Body>
-          </Card>
-
-          {/* Submissions overview for admin */}
-          {user.role === "admin" && (
-            <Card>
-              <Card.Header>
-                <h6>📝 Submissions ({submissions.length})</h6>
-              </Card.Header>
-              <Card.Body>
-                {submissions.length > 0 ? (
-                  <div>
-                    {submissions.slice(0, 5).map((sub) => (
-                      <div key={sub._id} className="border-bottom pb-2 mb-2">
-                        <div className="d-flex justify-content-between">
-                          <strong>{sub.student.fullName}</strong>
-                          <Badge bg={sub.status === "graded" ? "success" : "warning"}>
-                            {sub.status}
-                          </Badge>
+                </Card.Header>
+                <Card.Body>
+                  <p><strong>Submitted:</strong> {formatDate(submission.submittedAt)}</p>
+                  <div className="bg-light p-3 rounded">
+                    <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>
+                      {submission.content}
+                    </pre>
+                  </div>
+                  {submission.status === "graded" && (
+                    <div className="mt-3">
+                      <p><strong>Grade:</strong> {submission.marks}/{assignment.totalMarks}</p>
+                      {submission.feedback && (
+                        <div>
+                          <strong>Feedback:</strong>
+                          <div className="bg-info bg-opacity-10 p-3 rounded mt-2">
+                            {submission.feedback}
+                          </div>
                         </div>
-                        <small className="text-muted">
-                          {formatDate(sub.submittedAt)}
-                          {sub.status === "graded" && ` • ${sub.marks}/${assignment.totalMarks}`}
-                        </small>
-                      </div>
-                    ))}
-                    {submissions.length > 5 && (
-                      <small className="text-muted">...and {submissions.length - 5} more</small>
-                    )}
-                    <Link
-                      to={`/assignments/${assignment._id}/submissions`}
-                      className="btn btn-outline-primary btn-sm w-100 mt-2"
-                    >
-                      View All Submissions
-                    </Link>
-                  </div>
-                ) : (
-                  <p className="text-muted mb-0">No submissions yet</p>
-                )}
-              </Card.Body>
-            </Card>
-          )}
-        </Col>
-      </Row>
+                      )}
+                    </div>
+                  )}
+                </Card.Body>
+              </Card>
+            )}
+          </Tab>
+        </Tabs>
+      ) : (
+        <Card>
+          <Card.Header>
+            <h5>Assignment Details</h5>
+          </Card.Header>
+          <Card.Body>
+            <div className="bg-light p-3 rounded mb-3">
+              <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>
+                {assignment.description}
+              </pre>
+            </div>
+            <p><strong>Due Date:</strong> {formatDate(assignment.dueDate)}</p>
+            <p><strong>Total Points:</strong> {assignment.totalMarks}</p>
+            <p><strong>Created By:</strong> {assignment.createdBy?.fullName}</p>
+          </Card.Body>
+        </Card>
+      )}
 
+      {/* Enhanced Submit Modal */}
       <Modal show={showSubmitModal} onHide={() => setShowSubmitModal(false)} size="lg">
         <Modal.Header closeButton>
-          <Modal.Title>Submit Assignment: {assignment.title}</Modal.Title>
+          <Modal.Title>📝 Submit Assignment: {assignment.title}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+          <Alert variant={isOverdue(assignment.dueDate) ? "warning" : "info"}>
+            {isOverdue(assignment.dueDate) ? (
+              <>
+                <strong>⚠️ Late Submission:</strong> This assignment is past the due date. Your submission will be marked as late.
+              </>
+            ) : (
+              <>
+                <strong>📝 On Time:</strong> You're submitting before the deadline. Good job!
+              </>
+            )}
+          </Alert>
+
+          <div className="mb-3">
+            <strong>📋 Assignment:</strong> {assignment.title}
+            <br />
+            <strong>🎯 Points:</strong> {assignment.totalMarks}
+            <br />
+            <strong>📅 Due:</strong> {formatDate(assignment.dueDate)}
+          </div>
+
           <Form.Group>
-            <Form.Label>Your Answer</Form.Label>
+            <Form.Label>
+              <strong>Your Answer/Solution *</strong>
+            </Form.Label>
             <Form.Control
               as="textarea"
-              rows={10}
+              rows={12}
               value={submissionContent}
               onChange={(e) => setSubmissionContent(e.target.value)}
-              placeholder="Enter your complete solution here..."
+              placeholder="Type your complete answer here...
+
+Examples:
+- For coding assignments: Paste your code with explanations
+- For essays: Write your complete response
+- For math problems: Show your work step by step
+- For research: Include your findings and analysis"
+              required
+              style={{ fontFamily: "monospace" }}
             />
+            <Form.Text className="text-muted">
+              Provide your complete solution. You can include code, explanations, calculations, or written responses.
+            </Form.Text>
           </Form.Group>
+
+          <Alert variant="light" className="mt-3">
+            <strong>📋 Before submitting:</strong>
+            <ul className="mb-0 mt-2">
+              <li>✅ Review your work carefully</li>
+              <li>✅ Ensure all requirements are met</li>
+              <li>✅ Check for any errors or typos</li>
+              <li>⚠️ You cannot edit after submission</li>
+            </ul>
+          </Alert>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowSubmitModal(false)}>
