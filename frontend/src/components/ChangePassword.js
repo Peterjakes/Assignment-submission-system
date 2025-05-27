@@ -1,7 +1,12 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { toast } from "react-toastify"
+import axios from "axios"
 import { Card, Form, Button } from "react-bootstrap"
 
 const ChangePassword = () => {
+  const navigate = useNavigate()
+  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     currentPassword: "",
     newPassword: "",
@@ -9,11 +14,12 @@ const ChangePassword = () => {
   })
   const [errors, setErrors] = useState({})
 
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api"
+
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData({ ...formData, [name]: value })
 
-    // Clear specific error when user starts typing
     if (errors[name]) {
       setErrors({ ...errors, [name]: "" })
     }
@@ -46,15 +52,54 @@ const ChangePassword = () => {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
     if (!validateForm()) {
       return
     }
 
-    // TODO: Add API call
-    console.log("Form is valid:", formData)
+    try {
+      setLoading(true)
+      const token = sessionStorage.getItem("token")
+
+      await axios.put(
+        `${API_URL}/users/change-password`,
+        {
+          currentPassword: formData.currentPassword,
+          newPassword: formData.newPassword,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      )
+
+      toast.success("Password changed successfully!")
+      
+      // Reset form
+      setFormData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      })
+
+      setTimeout(() => {
+        navigate("/dashboard")
+      }, 2000)
+    } catch (error) {
+      const errorMessage = error.response?.data?.error?.message || "Failed to change password"
+      toast.error(errorMessage)
+
+      if (error.response?.status === 400) {
+        setFormData({ ...formData, currentPassword: "" })
+        setErrors({ currentPassword: "Current password is incorrect" })
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -108,9 +153,14 @@ const ChangePassword = () => {
               <Form.Control.Feedback type="invalid">{errors.confirmPassword}</Form.Control.Feedback>
             </Form.Group>
 
-            <Button variant="primary" type="submit">
-              Change Password
-            </Button>
+            <div className="d-flex justify-content-end">
+              <Button variant="secondary" className="me-2" onClick={() => navigate("/dashboard")}>
+                Cancel
+              </Button>
+              <Button variant="primary" type="submit" disabled={loading}>
+                {loading ? "Changing Password..." : "Change Password"}
+              </Button>
+            </div>
           </Form>
         </Card.Body>
       </Card>
