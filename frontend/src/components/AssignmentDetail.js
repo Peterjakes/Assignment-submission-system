@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
+import { toast } from "react-toastify"
 import axios from "axios"
 import { Card, Button } from "react-bootstrap"
 import { useAuth } from "../contexts/AuthContext"
@@ -26,7 +27,8 @@ const AssignmentDetail = () => {
       setAssignment(response.data)
       setLoading(false)
     } catch (error) {
-      console.error("Error:", error)
+      console.error("Error fetching assignment:", error)
+      toast.error("Failed to load assignment")
       setLoading(false)
     }
   }
@@ -48,7 +50,11 @@ const AssignmentDetail = () => {
           <h5>Assignment Details</h5>
         </Card.Header>
         <Card.Body>
-          <p><strong>Description:</strong> {assignment.description}</p>
+          <div className="bg-light p-3 rounded mb-3">
+            <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>
+              {assignment.description}
+            </pre>
+          </div>
           <p><strong>Due Date:</strong> {new Date(assignment.dueDate).toLocaleString()}</p>
           <p><strong>Total Points:</strong> {assignment.totalMarks}</p>
           <p><strong>Created By:</strong> {assignment.createdBy?.fullName}</p>
