@@ -102,6 +102,56 @@ const Profile = () => {
                   </Card>
                 </Col>
               </Row>
+
+              <Row className="mt-4">
+                <Col md={12}>
+                  <Card>
+                    <Card.Header>
+                      <strong>📊 Account Statistics</strong>
+                    </Card.Header>
+                    <Card.Body>
+                      <Row className="text-center">
+                        <Col md={3}>
+                          <div className="border rounded p-3">
+                            <h4 className="text-primary">👤</h4>
+                            <small className="text-muted">Account Type</small>
+                            <div>
+                              <strong>{user?.role?.toUpperCase()}</strong>
+                            </div>
+                          </div>
+                        </Col>
+                        <Col md={3}>
+                          <div className="border rounded p-3">
+                            <h4 className="text-success">✅</h4>
+                            <small className="text-muted">Account Status</small>
+                            <div>
+                              <strong>ACTIVE</strong>
+                            </div>
+                          </div>
+                        </Col>
+                        <Col md={3}>
+                          <div className="border rounded p-3">
+                            <h4 className="text-info">🔐</h4>
+                            <small className="text-muted">Security</small>
+                            <div>
+                              <strong>PROTECTED</strong>
+                            </div>
+                          </div>
+                        </Col>
+                        <Col md={3}>
+                          <div className="border rounded p-3">
+                            <h4 className="text-warning">📅</h4>
+                            <small className="text-muted">Member Since</small>
+                            <div>
+                              <strong>2024</strong>
+                            </div>
+                          </div>
+                        </Col>
+                      </Row>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              </Row>
             </Card.Body>
           </Card>
         </Col>
