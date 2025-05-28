@@ -1,5 +1,3 @@
-"use client"
-
 import { Outlet, NavLink, useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 import { Navbar, Container, Nav, Button, NavDropdown } from "react-bootstrap"
