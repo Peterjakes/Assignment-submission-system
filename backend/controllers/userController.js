@@ -4,6 +4,86 @@ const User = require("../models/User")
 const { updateUserSchema, registerSchema } = require("../helpers/validationSchema.js")
 
 const userController = {
+  // Get current user profile
+  getProfile: async (req, res, next) => {
+    try {
+      const user = await User.findById(req.payload.userId, "-password")
+      if (!user) {
+        throw createError(404, "User not found")
+      }
+      res.json(user)
+    } catch (error) {
+      console.error("Get profile error:", error.message)
+      next(error)
+    }
+  },
+
+  // Update current user profile
+  updateProfile: async (req, res, next) => {
+    try {
+      const userId = req.payload.userId
+      const update = await updateUserSchema.validateAsync(req.body)
+
+      // Remove password from profile update (use separate endpoint)
+      delete update.password
+      delete update.role // Users can't change their own role
+
+      const user = await User.findByIdAndUpdate(userId, update, { new: true }).select("-password")
+      if (!user) {
+        throw createError(404, "User not found")
+      }
+
+      res.json({
+        message: "Profile updated successfully",
+        user,
+      })
+    } catch (error) {
+      console.error("Update profile error:", error.message)
+      if (error.isJoi === true) {
+        error.status = 422
+      }
+      next(error)
+    }
+  },
+
+  // Change password for current user
+  changePassword: async (req, res, next) => {
+    try {
+      const userId = req.payload.userId
+      const { currentPassword, newPassword } = req.body
+
+      if (!currentPassword || !newPassword) {
+        throw createError(400, "Current password and new password are required")
+      }
+
+      if (newPassword.length < 6) {
+        throw createError(400, "New password must be at least 6 characters")
+      }
+
+      const user = await User.findById(userId)
+      if (!user) {
+        throw createError(404, "User not found")
+      }
+
+      // Verify current password
+      const isMatch = await user.comparePassword(currentPassword)
+      if (!isMatch) {
+        throw createError(400, "Current password is incorrect")
+      }
+
+      // Update password
+      user.password = newPassword
+      await user.save()
+
+      res.json({
+        message: "Password changed successfully",
+      })
+    } catch (error) {
+      console.error("Change password error:", error.message)
+      next(error)
+    }
+  },
+
   // Create a new user (student or admin/lecturer)
   createUser: async (req, res, next) => {
     try {
@@ -95,7 +175,7 @@ const userController = {
     }
   },
 
-  // Update user
+  // Update user (admin only)
   updateUser: async (req, res, next) => {
     try {
       const id = req.params.id
@@ -137,6 +217,35 @@ const userController = {
       if (error.isJoi === true) {
         error.status = 422
       }
+      if (error instanceof mongoose.CastError) {
+        return next(createError(400, "Invalid user ID"))
+      }
+      next(error)
+    }
+  },
+
+  // Update user role (admin only) - NEW METHOD
+  updateUserRole: async (req, res, next) => {
+    try {
+      const id = req.params.id
+      const { role } = req.body
+
+      if (!role || !["admin", "student"].includes(role)) {
+        throw createError(400, "Valid role (admin or student) is required")
+      }
+
+      const user = await User.findByIdAndUpdate(id, { role }, { new: true }).select("-password")
+
+      if (!user) {
+        throw createError(404, "User not found")
+      }
+
+      res.json({
+        message: "User role updated successfully",
+        user,
+      })
+    } catch (error) {
+      console.error("Update user role error:", error.message)
       if (error instanceof mongoose.CastError) {
         return next(createError(400, "Invalid user ID"))
       }

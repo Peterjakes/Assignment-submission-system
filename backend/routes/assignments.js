@@ -10,6 +10,12 @@ router.post("/", verifyAccessToken, restrict("admin"), assignmentController.crea
 // Get all assignments
 router.get("/", verifyAccessToken, assignmentController.getAllAssignments)
 
+// Get student's own submissions (students only)
+router.get("/my-submissions", verifyAccessToken, restrict("student"), assignmentController.getStudentSubmissions)
+
+// Grade submission (admin only) - FIXED ROUTE
+router.patch("/submissions/:id/grade", verifyAccessToken, restrict("admin"), assignmentController.gradeSubmission)
+
 // Get specific assignment
 router.get("/:id", verifyAccessToken, assignmentController.getAssignmentById)
 
@@ -22,14 +28,11 @@ router.patch("/:id/publish", verifyAccessToken, restrict("admin"), assignmentCon
 // Delete assignment (admin only)
 router.delete("/:id", verifyAccessToken, restrict("admin"), assignmentController.deleteAssignment)
 
-// Submit assignment (students)
+// Submit assignment (students only)
 router.post("/:id/submit", verifyAccessToken, restrict("student"), assignmentController.submitAssignment)
 
 // Get submissions for an assignment
 router.get("/:id/submissions", verifyAccessToken, assignmentController.getSubmissions)
-
-// Get student submissions
-router.get("/my-submissions", verifyAccessToken, restrict("student"), assignmentController.getStudentSubmissions)
 
 // Get submissions for a specific student (admin only)
 router.get(
@@ -38,8 +41,5 @@ router.get(
   restrict("admin"),
   assignmentController.getStudentSubmissions,
 )
-
-// Grade submission (admin only)
-router.patch("/submissions/:id/grade", verifyAccessToken, restrict("admin"), assignmentController.gradeSubmission)
 
 module.exports = router

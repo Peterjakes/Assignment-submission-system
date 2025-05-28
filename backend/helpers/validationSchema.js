@@ -1,11 +1,12 @@
-import Joi from "joi"
+const Joi = require("joi")
 
-export const authSchema = Joi.object({
+// Auth schemas
+exports.authSchema = Joi.object({
   email: Joi.string().email().lowercase().required(),
   password: Joi.string().min(6).required(),
 })
 
-export const registerSchema = Joi.object({
+exports.registerSchema = Joi.object({
   username: Joi.string().required().min(3),
   password: Joi.string().min(6).required(),
   role: Joi.string().valid("admin", "student").default("student"),
@@ -18,12 +19,13 @@ export const registerSchema = Joi.object({
   }),
 })
 
-export const loginSchema = Joi.object({
-  email: Joi.string().email().required(),
+exports.loginSchema = Joi.object({
+  email: Joi.string().required(), // Can be email or username
   password: Joi.string().required(),
 })
 
-export const assignmentSchema = Joi.object({
+// Assignment schemas
+exports.assignmentSchema = Joi.object({
   title: Joi.string().required(),
   description: Joi.string().required(),
   dueDate: Joi.date().required(),
@@ -31,11 +33,27 @@ export const assignmentSchema = Joi.object({
   totalMarks: Joi.number().required().min(0),
 })
 
-export const submissionSchema = Joi.object({
+exports.submissionSchema = Joi.object({
   content: Joi.string().required(),
 })
 
-export const gradeSchema = Joi.object({
+exports.gradeSchema = Joi.object({
   marks: Joi.number().required().min(0),
   feedback: Joi.string().allow("", null),
+})
+
+// User schema
+exports.updateUserSchema = Joi.object({
+  username: Joi.string().min(3),
+  password: Joi.string().min(6),
+  fullName: Joi.string(),
+  email: Joi.string().email(),
+  studentId: Joi.string(),
+  role: Joi.string().valid("admin", "student"),
+})
+
+// Password change schema
+exports.changePasswordSchema = Joi.object({
+  currentPassword: Joi.string().required(),
+  newPassword: Joi.string().min(6).required(),
 })
