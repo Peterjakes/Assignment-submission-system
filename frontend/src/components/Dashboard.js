@@ -12,6 +12,7 @@ const Dashboard = () => {
     submissions: 0,
     pendingSubmissions: 0,
   })
+  
   const [recentAssignments, setRecentAssignments] = useState([])
   const [recentSubmissions, setRecentSubmissions] = useState([])
   const [loading, setLoading] = useState(true)
